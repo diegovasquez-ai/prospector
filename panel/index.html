@@ -105,6 +105,9 @@ textarea[readonly], input[readonly] { opacity: .8; }
 .check { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; cursor: pointer; }
 .check input { margin-top: 4px; accent-color: var(--accent); }
 .check span { overflow-wrap: anywhere; }
+.wa-numero { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+.wa-numero input { width: 200px; max-width: 100%; }
+.wa-botones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .nota-chica { color: var(--muted); font-size: 12px; margin: -2px 0 6px; }
 .caja.resalta { outline: 2px solid var(--warn); outline-offset: 2px; }
 .porque { border: 0; background: none; color: var(--warn); cursor: pointer; font: inherit; font-size: 13px; padding: 0; text-align: right; }
@@ -483,6 +486,7 @@ function pintar() {
           h("h2", { id: "comprobar-t" }, "Comprueba antes de aprobar"),
           h("p", { class: "nota-chica" }, "Si alguna resulta falsa, el correo diría algo que no es: corrígelo antes de aprobar."),
           ...comprobar) : null,
+        cajaWhatsapp(),
         h("div", { class: "caja" },
           h("h2", {}, "Lo que vimos"),
           b.observacion ? h("div", { class: "obs" }, h("b", {}, "Observación elegida"), b.observacion) : null,
@@ -501,6 +505,7 @@ function pintar() {
   document.querySelectorAll("textarea.cuerpo").forEach(ajustar);
   pintarRevision();
   pintarAcciones();
+  pintarWhatsapp();
   window.scrollTo({ top: 0 });
 }
 
@@ -517,10 +522,54 @@ async function accionAfinar(nota, boton) {
   finally { boton.disabled = false; boton.classList.remove("girando"); }
 }
 
+function cajaWhatsapp() {
+  const w = actual.whatsapp_vista;
+  if (!w || !w.mostrar) return null;
+  const enviado = (w.enviados || []).at(-1);
+  const guardarW = async (campos) => {
+    try { actual = await api(`/api/borradores/${actual.dominio}/whatsapp`, campos); pintarWhatsapp(); }
+    catch (e) { aviso(e.message, true); }
+  };
+  const numero = h("input", { type: "text", value: w.numero, placeholder: "+56 9 1234 5678",
+    onchange: (e) => guardarW({ numero: e.target.value }) });
+  const mensaje = h("textarea", { rows: 3, value: w.mensaje, onchange: (e) => guardarW({ mensaje: e.target.value }) });
+  const abrir = h("button", { class: "btn prim", id: "wa-abrir", disabled: !!w.bloqueo, title: w.bloqueo || "Se abre el chat: tú lo revisas y lo envías",
+    onclick: () => {
+      const v = actual.whatsapp_vista;
+      window.open(`${v.enlace}?text=${encodeURIComponent(mensaje.value)}`, "_blank", "noopener");
+    } }, "Abrir WhatsApp");
+  const marcar = h("button", { class: "btn", id: "wa-enviado", disabled: !!w.bloqueo || !!enviado,
+    onclick: (e) => accion("whatsapp", { accion: "enviado", mensaje: mensaje.value }, e.currentTarget) }, "Ya lo envié");
+  const respondio = h("button", { class: "btn", disabled: !["enviando", "terminado"].includes(actual.estado),
+    title: "Corta los recordatorios por correo",
+    onclick: (e) => accion("whatsapp", { accion: "respondio" }, e.currentTarget) }, "Respondió por WhatsApp");
+  return h("div", { class: "caja", id: "caja-whatsapp" },
+    h("h2", {}, "WhatsApp, a mano"),
+    h("p", { class: "nota-chica", id: "wa-nota" }),
+    h("div", { class: "wa-numero" }, numero, w.fuente ? enlace(w.fuente, "fuente ↗") : null),
+    mensaje,
+    h("div", { class: "wa-botones" }, abrir, marcar, respondio),
+    enviado ? h("p", { class: "nota-chica" }, `Lo marcaste como enviado: ${hora(enviado)}`) : null,
+  );
+}
+
+function pintarWhatsapp() {
+  const w = actual.whatsapp_vista;
+  const nota = $("wa-nota");
+  if (!w || !nota) return;
+  const persona = w.de === "persona" ? " Parece el celular de una persona: escríbele solo si lo publica para consultas." : "";
+  const desconocido = !w.de && w.numero ? " Comprueba de quién es este número antes de escribir." : "";
+  nota.textContent = (w.bloqueo ? w.bloqueo + ". " : "Mejor desde el día siguiente al correo. ") + "Tú lo revisas y lo envías; nada sale solo." + persona + desconocido;
+  const abrir = $("wa-abrir"), marcar = $("wa-enviado");
+  if (abrir) { abrir.disabled = !!w.bloqueo; abrir.title = w.bloqueo || "Se abre el chat: tú lo revisas y lo envías"; }
+  if (marcar) marcar.disabled = !!w.bloqueo || !!(w.enviados || []).length;
+}
+
 function respuestaBox() {
   const opciones = [["si", "Sí, mándalo"], ["info", "Envíame información"], ["ahora_no", "Ahora no (60 días)"], ["baja", "No le interesa / baja"]];
   return h("div", { class: "banner warn", style: "margin:0 0 14px" },
-    h("b", {}, "Te respondió. "), "Léelo en Gmail y dime qué dijo: ",
+    h("b", {}, actual.respuesta_canal === "whatsapp" ? "Te respondió por WhatsApp. " : "Te respondió. "),
+    actual.respuesta_canal === "whatsapp" ? "¿Qué dijo? " : "Léelo en Gmail y dime qué dijo: ",
     ...opciones.map(([tipo, texto]) => h("button", { class: "btn", style: "margin-left:6px", onclick: (e) => accion("respuesta", { tipo }, e.currentTarget) }, texto)));
 }
 

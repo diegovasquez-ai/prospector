@@ -95,6 +95,7 @@ saluda "Hola," y escribe de ustedes.
   ],
   "observacion": "La que elegiste y por qué es la mejor",
   "falta": "La señal concreta del problema que viste",
+  "whatsapp": {"numero": "+56912345678", "de": "general", "fuente": "https://...", "mensaje": "..."},
   "comprobar": [],
   "contexto": ["Lo que conviene saber si responde"],
   "correos": [
@@ -116,6 +117,12 @@ saluda "Hola," y escribe de ustedes.
 - `contexto`: lo que no pudiste confirmar o conviene saber si responde
   (anuncios, reseñas, LinkedIn, qué sistema usan, quién más decide). No
   bloquea nada: el panel lo enseña en «Para cuando responda».
+- `whatsapp`: solo un número que publican como WhatsApp (un botón o un enlace, ver
+  la ficha). Nunca un teléfono cualquiera ni uno deducido: si no hay, deja `{}`.
+  `de` es `general` si es para consultas, o `persona` si es el celular de alguien;
+  en ese caso, úsalo solo si lo publica para recibir consultas. `mensaje`: 1 o 2
+  líneas, sin vender ni dato nuevo, que recuerde el correo. Si el número es general,
+  no des por hecho que contesta el decisor ("le escribí por correo a Ana...").
 - Los correos 2 y 3 van en el mismo hilo: su `asunto` va vacío.
 - Los saltos de línea del cuerpo, como `\n` dentro del JSON.
 

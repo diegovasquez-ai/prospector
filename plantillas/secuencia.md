@@ -86,3 +86,14 @@ responde este mismo correo y lo retomamos. Te deseo lo mejor con {empresa}.
 ```
 
 La firma la pone el panel al enviar: no va en el cuerpo.
+
+## WhatsApp · opcional, a mano
+
+Después del correo 1, mejor desde el día siguiente, un mensaje de 1 o 2 líneas que
+lo recuerde. Sin vender ni contar nada nuevo. El panel abre el chat con el mensaje
+escrito y tú lo envías: nada sale solo. Si responde por ahí, márcalo en el panel
+para que se corten los recordatorios por correo.
+
+```
+Hola, soy {tu nombre}. Le escribí por correo a {nombre} hace unos días. ¿Sabes si lo alcanzó a ver?
+```

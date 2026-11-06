@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from bs4 import BeautifulSoup
 
-from prospector import analizar, base, cli, config, correos, envio, gmail, iniciar, nicho, panel, preparar, puente
+from prospector import analizar, base, cli, config, correos, envio, gmail, iniciar, nicho, panel, preparar, puente, whatsapp
 from prospector.puente import exclusiones
 
 _ok = _mal = 0
@@ -159,6 +159,41 @@ comprobar("y el problema queda en su negocio", "Se les van socios" in iniciar.NE
 nicho.ARCHIVO, iniciar.NEGOCIO, gmail.FIRMA = _arch, _neg, _fir
 config.guardar = _guardado
 nicho.guardar(nicho.ejemplo("inmobiliarias"))
+
+seccion("WhatsApp, a mano")
+_cl = nicho.pais()
+_html = ('<a href="https://wa.me/56912345678?text=hola">a</a><a href="https://api.whatsapp.com/send?phone=56912345678">b</a>'
+         '<a href="https://wa.me/56987654321">c</a><a href="tel:+56222222222">fijo</a>').lower()
+comprobar("saca los números de sus botones, el más usado primero", whatsapp.numeros_en(_html, _cl), ["+56912345678", "+56987654321"])
+comprobar("un teléfono común no cuenta como WhatsApp", whatsapp.numeros_en('<a href="tel:+56912345678">x</a>', _cl), [])
+_s, _ = analizar.medir({"nombre": "X", "web": "https://x.cl"}, {"portada": ("https://x.cl/", _html)})
+comprobar("el análisis guarda el número", _s["whatsapp_numeros"][0], "+56912345678")
+comprobar("el número se limpia", whatsapp.limpiar("+56 9 1234-5678"), "+56912345678")
+_w = {"dominio": "w.cl", "web": "https://w.cl", "para": "ana@w.cl", "estado": "por revisar", "envios": [],
+      "decisor": {"nombre": "Ana Rojas"}, "whatsapp": {"numero": "+56912345678", "de": "general"}}
+comprobar("antes del correo no se puede", whatsapp.puede(_w), "Primero tiene que salir el correo 1")
+_w.update(estado="enviando", envios=[{"paso": 0}])
+comprobar("después del correo sí", whatsapp.puede(_w), "")
+comprobar("el mensaje no da por hecho quién contesta", "Le escribí por correo a Ana" in whatsapp.mensaje_por_defecto(_w), True)
+comprobar("no lleva enlaces ni venta", correos.VENDE.search(whatsapp.mensaje_por_defecto(_w)) is None and "http" not in whatsapp.mensaje_por_defecto(_w), True)
+_w["whatsapp"]["de"] = "persona"
+comprobar("si es su celular, le habla a ella", whatsapp.mensaje_por_defecto(_w).startswith("Hola Ana,"), True)
+comprobar("el enlace lleva el número sin signos", whatsapp.vista(_w)["enlace"], "https://wa.me/56912345678")
+comprobar("marcar enviado guarda la fecha", (whatsapp.accion(_w, {"accion": "enviado"}), len(_w["whatsapp_envios"])), ("", 1))
+comprobar("un número malo se rechaza", "no parece" in whatsapp.accion({"estado": "enviando"}, {"numero": "123"}), True)
+comprobar("responder por WhatsApp corta la secuencia",
+          (whatsapp.accion(_w, {"accion": "respondio"}), _w["estado"], _w["respuesta_canal"], envio.seguimiento_pendiente(_w, datetime.now())),
+          ("", "respondió", "whatsapp", None))
+_x = {"dominio": "fuera-wa.cl", "web": "https://fuera-wa.cl", "para": "a@fuera-wa.cl", "estado": "enviando", "envios": [{"paso": 0}],
+      "whatsapp": {"numero": "+56911112222"}}
+exclusiones.anadir("+56911112222", "prueba")
+comprobar("la lista negra bloquea por número", whatsapp.puede(_x), "Está en la lista negra")
+_x["whatsapp"]["numero"] = "+56933334444"
+exclusiones.anadir("fuera-wa.cl", "prueba")
+comprobar("y por dominio", whatsapp.puede(_x), "Está en la lista negra")
+_ve = {**_w, "estado": "descartada"}
+comprobar("a una descartada no se le ofrece", whatsapp.vista(_ve)["mostrar"], False)
+
 
 seccion("El nicho de ejemplo sigue filtrando igual")
 _c = {"portada": "Corretaje y arriendo"}
@@ -468,6 +503,14 @@ comprobar("la prueba te manda los 3 a ti, en un hilo",
           [("yo@gmail.com", "[Prueba] "), ("yo@gmail.com", "[Prueba] "), ("yo@gmail.com", "[Prueba] ")])
 comprobar("y la prueba no lo saca de la cola", r["estado"], "aprobado")
 correos.guardar(borrador("contesto.cl", estado="respondió"))
+correos.guardar(borrador("wa-panel.cl", estado="enviando", envios=[{"paso": 0, "fecha": "2026-11-02T10:00:00", "message_id": "<x>", "para": "ana@wa-panel.cl"}]))
+_c, _d = pedir("/api/borradores/wa-panel.cl/whatsapp", {"numero": "+56 9 1234 5678", "mensaje": "Hola"})
+comprobar("el panel guarda número y mensaje", (_c, _d["whatsapp_vista"]["numero"], _d["whatsapp_vista"]["mensaje"], _d["whatsapp_vista"]["bloqueo"]), (200, "+56912345678", "Hola", ""))
+_c, _d = pedir("/api/borradores/wa-panel.cl/whatsapp", {"accion": "enviado"})
+comprobar("el panel marca el envío", (_c, len(_d["whatsapp_vista"]["enviados"])), (200, 1))
+_c, _d = pedir("/api/borradores/wa-panel.cl/whatsapp", {"accion": "respondio"})
+comprobar("y la respuesta por WhatsApp", (_c, _d["estado"], _d["respuesta_canal"]), (200, "respondió", "whatsapp"))
+correos.ruta("wa-panel.cl").unlink()
 pedir("/api/borradores/contesto.cl/respuesta", {"tipo": "baja"})
 comprobar("'no me interesa' lo manda a la lista negra",
           (correos.leer("contesto.cl")["estado"], exclusiones.esta_bloqueado({"web": "https://contesto.cl"})),

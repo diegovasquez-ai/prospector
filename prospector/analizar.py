@@ -253,6 +253,11 @@ def _correos(sopa: BeautifulSoup, texto: str) -> list[str]:
 
 # --- Medir ----------------------------------------------------------------------
 
+def _numeros_wa(html: str) -> list[str]:
+    from .whatsapp import numeros_en  # aquí: whatsapp importa este paquete
+    return numeros_en(html, nicho.pais())
+
+
 def medir(lead: dict, paginas: dict[str, tuple[str, str]]) -> tuple[dict, dict[str, str]]:
     """Devuelve (señales, textos por página). Los textos solo van a la ficha."""
     nc = nicho.actual()
@@ -305,6 +310,7 @@ def medir(lead: dict, paginas: dict[str, tuple[str, str]]) -> tuple[dict, dict[s
         "fecha": date.today().isoformat(),
         "paginas": {t: u for t, (u, _) in paginas.items()},
         "whatsapp": any(w in html_todo for w in WHATSAPP),
+        "whatsapp_numeros": _numeros_wa(html_todo),
         "chat": [n for n, huellas in CHATS.items() if any(h in html_todo for h in huellas)],
         "formulario": formulario,
         "telefono": telefono,
@@ -525,6 +531,7 @@ def escribir_ficha(lead: dict, textos: dict[str, str]) -> None:
         "## Cómo entra una consulta",
         f"WhatsApp {_si(s['whatsapp'])} · chat {', '.join(s['chat']) or 'no'}"
         f" · formulario {_si(s['formulario'])} · teléfono {_si(s['telefono'])}",
+        f"WhatsApp publicado: {', '.join(s['whatsapp_numeros']) or 'ninguno en un botón'}",
         "",
         "## Anuncios",
         f"Píxel de Meta {_si(s['meta_pixel'])} · Google Ads {_si(s['google_ads'])}"

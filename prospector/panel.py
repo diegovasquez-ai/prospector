@@ -17,12 +17,12 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
 from urllib.request import urlopen
 
-from . import config, correos, envio, gmail, radar
+from . import config, correos, envio, gmail, radar, whatsapp
 from .analizar import FICHAS
 from .puente import RAIZ, exclusiones
 
 PAGINA = RAIZ / "panel" / "index.html"
-ACCIONES = ("guardar", "aprobar", "devolver", "rechazar", "deshacer", "prueba", "respuesta")
+ACCIONES = ("guardar", "aprobar", "devolver", "rechazar", "deshacer", "prueba", "respuesta", "whatsapp")
 RESPUESTAS = {
     "si": ("interesado", "Quiere el diagnóstico: prepáralo y propón 20 minutos para revisarlo."),
     "info": ("interesado", "Pidió información: mándale el diagnóstico, no un PDF de servicios."),
@@ -57,6 +57,7 @@ def detalle(b: dict) -> dict:
     return correos.con_revision(b) | {
         "ficha": ficha.read_text(encoding="utf-8") if ficha.exists() else "",
         "firma": gmail.firma(),
+        "whatsapp_vista": whatsapp.vista(b),
     }
 
 
@@ -229,6 +230,9 @@ class Manejador(BaseHTTPRequestHandler):
         if tipo == "baja":
             exclusiones.anadir(b["dominio"], f"respondió: no le interesa ({date.today()})")
         return ""
+
+    def _whatsapp(self, b: dict, d: dict) -> str:
+        return whatsapp.accion(b, d)
 
     def _afinar(self, dominio: str, nota: str):
         if not nota.strip():

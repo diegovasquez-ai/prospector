@@ -76,6 +76,23 @@ Cuando alguien responde, su secuencia se detiene sola y te aparece en
 **Respondieron**. Para contestar, apóyate en [plantillas/respuestas.md](plantillas/respuestas.md)
 o pídele ayuda a Claude.
 
+## WhatsApp, a mano
+
+Si un negocio publica un botón de WhatsApp, el panel guarda el número. Después del
+correo 1, **Abrir WhatsApp** abre el chat con un mensaje corto ya escrito: lo revisas
+y lo envías tú. Después marca **Ya lo envié**, y si te contestan por ahí, **Respondió
+por WhatsApp**, para que se corten los recordatorios por correo.
+
+- **No se automatiza a propósito**: WhatsApp suele banear los números que envían
+  mensajes en frío de forma automatizada, y podrías perder el tuyo.
+- **Muchos son celulares personales**: un mensaje ahí pesa más que un correo. Si dudas
+  de quién es el número, comprueba antes de escribir.
+- **Quien pide la baja deja de recibir por los dos canales.**
+- Para los borradores que ya tenías: `python prospector.py whatsapp`.
+
+`python prospector.py metricas` compara cuántos responden con WhatsApp y con solo
+correo. Prueba con unos 10 antes de hacerlo siempre.
+
 ## Ajustar tu nicho
 
 Todo lo propio de tu rubro vive en `nicho.json`:

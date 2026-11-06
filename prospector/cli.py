@@ -144,6 +144,11 @@ def metricas() -> int:
         print(f"    {cuenta('baja'):>4}  bajas")
         print(f"    {cuenta('rebotó'):>4}  rebotaron")
         print(f"    {cuenta('respondió'):>4}  respondieron y falta clasificarlas en el panel")
+        con = [b for b in g if b.get("whatsapp_envios")]
+        sin = [b for b in g if not b.get("whatsapp_envios")]
+        contesto = lambda grupo: sum(1 for b in grupo if b.get("estado") in ("respondió", "interesado", "retomar", "baja"))  # noqa: E731
+        if con:
+            print(f"    Con WhatsApp: {contesto(con)} de {len(con)} respondieron · solo correo: {contesto(sin)} de {len(sin)}")
     print(pantalla.c("\n  Cambia una sola cosa por semana (asunto, observación o CTA) para saber qué movió el número.", "gris"))
     return 0
 
@@ -216,6 +221,8 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("metricas", help="Fase 10: cómo va la semana")
 
+    sub.add_parser("whatsapp", help="Busca el WhatsApp de tus borradores que no lo tienen")
+
     sub.add_parser("treg", help="Conecta Treg (buscar y verificar el correo del decisor)")
     co = sub.add_parser("contactos", help="Prueba de Treg: ¿encuentra el correo del decisor? No toca nada")
     co.add_argument("--tope", type=float, default=0.8, help="USD máximos para la prueba (0.80)")
@@ -230,6 +237,10 @@ def main(argv: list[str] | None = None) -> int:
         return automatizar.quitar() if ns.quitar else automatizar.instalar(ns.n, ns.hora)
     if ns.cmd == "metricas":
         return metricas()
+    if ns.cmd == "whatsapp":
+        from . import config, whatsapp
+        config.cargar()
+        return whatsapp.completar()
     if ns.cmd == "panel":
         from .panel import abrir
         return abrir(ns.puerto, navegador=not ns.sin_navegador)

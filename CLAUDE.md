@@ -23,6 +23,7 @@ python prospector.py baja ana@negocio.cl                 lista negra
 python prospector.py gmail                               conectar Gmail (interactivo: lo corre el usuario)
 python prospector.py automatizar [--quitar]              preparar 07:00 L-V + panel al encender (Windows)
 python prospector.py metricas                            Fase 10
+python prospector.py whatsapp                            busca el WhatsApp de los borradores que no lo tienen (no contacta a nadie)
 python prospector.py treg                                conectar Treg (interactivo: lo corre el usuario)
 python prospector.py contactos                           PRUEBA de Treg: ¿encuentra el correo del decisor? (gasta ≤ US$0,80, no toca nada)
 python pruebas.py                                        comprobaciones, sin red
@@ -129,6 +130,10 @@ borrador, porque lo pisaría.
 - Sale por SMTP de su Gmail con contraseña de aplicación (`.env`).
   **Tú nunca envías correos**: ni con el conector de Gmail ni de otra forma.
   Todo sale por la cola del panel, después de que el usuario apruebe.
+- **WhatsApp es manual**: el panel abre el chat con el mensaje escrito y el usuario lo
+  envía. No lo automatices ni envíes tú, porque WhatsApp suele banear esos números.
+  Solo después del correo 1 y solo a números publicados como WhatsApp. Si responde por
+  ahí, el usuario lo marca en el panel y se cortan los recordatorios por correo.
 - Ritmo: como mucho 20 nuevos al día, de lunes a viernes de 9 a 18, con
   6-18 minutos al azar entre uno y otro. Seguimientos el día 3 y el 7 en el
   mismo hilo. Solo corre mientras el panel está abierto.
