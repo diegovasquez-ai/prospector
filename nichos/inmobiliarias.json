@@ -1,0 +1,65 @@
+{
+  "rubro": "corredoras de propiedades",
+  "singular": "corredora",
+  "pais": "CL",
+  "busquedas": ["corredora de propiedades", "inmobiliaria"],
+  "confirman_en_nombre": ["corredor", "propiedades"],
+  "confirman_en_web": [
+    "corretaje", "corredora de propiedades", "corredores de propiedades",
+    "administracion de propiedades", "arriendo", "tasacion",
+    "publica tu propiedad", "vende tu propiedad", "arrienda tu propiedad", "propietarios"
+  ],
+  "descartar": [
+    {
+      "tipo": "desarrolladora",
+      "motivo": "vende proyectos propios (sala de ventas, en verde...)",
+      "en_categoria": ["urbanizaci", "promotora", "construcci", "constructora", "edificio",
+                       "condominio", "apartamentos", "vivienda"],
+      "nombre_empieza": ["edificio", "proyecto", "condominio", "parque", "loteo", "barrio"],
+      "en_web": ["sala de ventas", "entrega inmediata", "en verde", "en blanco", "nuestros proyectos",
+                 "proyectos en venta", "departamento piloto", "subsidio"],
+      "min_web": 2
+    },
+    {
+      "tipo": "inversion",
+      "motivo": "asesoría de inversión inmobiliaria, no corretaje",
+      "en_nombre": ["invers"],
+      "en_web": ["inversion inmobiliaria", "inversionistas", "rentabilidad", "asesoria de inversion",
+                 "invierte en", "plusvalia", "renta pasiva"],
+      "min_web": 3
+    }
+  ],
+  "cadenas": ["remax", "re/max", "century21", "century 21", "coldwellbanker", "coldwell banker",
+              "kellerwilliams", "keller williams", "kw.com", "engelvoelkers", "engel & v",
+              "sothebysrealty", "exprealty"],
+  "portales": {
+    "Portal Inmobiliario": "portalinmobiliario.com",
+    "TOCTOC": "toctoc.com",
+    "Yapo": "yapo.cl",
+    "Goplaceit": "goplaceit.com",
+    "iCasas": "icasas.cl",
+    "Chilepropiedades": "chilepropiedades.cl"
+  },
+  "directorios": ["mercantil.com"],
+  "sistemas": {
+    "Tokko Broker": ["tokkobroker"],
+    "Wasi": ["wasi.co"],
+    "Kiteprop": ["kiteprop"],
+    "Inmovilla": ["inmovilla"]
+  },
+  "catalogo": {
+    "etiqueta": "propiedades",
+    "paginas": ["propiedades", "inmuebles", "arriendo", "en venta", "catalogo", "catálogo", "listado"],
+    "enlace_detalle": ["propiedad", "inmueble", "ficha", "property", "detalle"],
+    "conteo": ["propiedades", "inmuebles", "resultados"],
+    "minimo": 30
+  },
+  "paginas_equipo": ["corredores", "agentes"],
+  "textos": {
+    "problema": "Las consultas que llegan fuera de horario o sin seguimiento se pierden.",
+    "resultado": "responder sus consultas al instante, agendar visitas y hacer seguimiento",
+    "logro": "Sus equipos recuperan tiempo y llegan a las visitas con prospectos más calificados.",
+    "icp_si": "Corredoras de propiedades con equipo (corretaje, arriendo, administración). Se le escribe al dueño, fundador o gerente comercial.",
+    "icp_no": "Desarrolladoras y venta en verde; asesorías de inversión; franquicias y redes con sistema corporativo; corredores independientes que trabajan solos; webs abandonadas."
+  }
+}

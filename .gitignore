@@ -1,0 +1,19 @@
+# Datos de contacto de gente real: no se suben.
+datos/
+fichas/
+borradores/
+
+# Quién eres y tus claves: cada uno crea los suyos con `python prospector.py iniciar`.
+.env
+negocio.md
+nicho.json
+firma.txt
+comunas.txt
+
+# Capturas de pantalla con datos y ajustes locales.
+.playwright-mcp/
+.claude/settings.local.json
+
+__pycache__/
+*.py[cod]
+.venv/

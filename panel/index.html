@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prospector</title>
+<link rel="icon" href="data:,">
+<style>
+:root {
+  --bg: #f5f4f0; --panel: #ffffff; --ink: #1d1f21; --muted: #6b6f76; --line: #e3e1db;
+  --chip: #eeede8; --accent: #1f6f5c; --accent-ink: #ffffff; --accent-soft: #e3f1ec;
+  --warn: #8a4b00; --warn-bg: #fff3dc; --bad: #b42318; --bad-bg: #fdecea;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131416; --panel: #1b1d20; --ink: #e9e7e2; --muted: #9a9ea6; --line: #2b2e33;
+    --chip: #25282c; --accent: #4fb49a; --accent-ink: #0b1512; --accent-soft: #17302a;
+    --warn: #f2b660; --warn-bg: #352812; --bad: #ff8f85; --bad-bg: #3a1a18;
+    --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--accent); }
+
+/* --- barra superior ------------------------------------------------------ */
+header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 18px;
+  flex-wrap: wrap; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.marca { font-weight: 650; letter-spacing: -.01em; }
+.contadores { display: flex; gap: 14px; color: var(--muted); flex-wrap: wrap; }
+.contadores b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.envio { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.envio small { color: var(--muted); }
+.punto { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.punto.on { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.banner { margin: 12px 20px 0; padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+.banner.warn { background: var(--warn-bg); color: var(--warn); }
+.banner.bad { background: var(--bad-bg); color: var(--bad); }
+
+/* --- disposición --------------------------------------------------------- */
+.app { display: grid; grid-template-columns: 290px 1fr; gap: 0; min-height: calc(100vh - 53px); }
+aside { border-right: 1px solid var(--line); padding: 14px 12px; }
+main { padding: 18px 24px 120px; min-width: 0; }
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  aside { border-right: 0; border-bottom: 1px solid var(--line); }
+  main { padding: 16px 16px 140px; }
+}
+
+.filtros { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.filtro { border: 1px solid var(--line); background: transparent; border-radius: 999px;
+  padding: 3px 10px; cursor: pointer; color: var(--muted); }
+.filtro.activo { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.lista { display: flex; flex-direction: column; gap: 4px; }
+.item { text-align: left; border: 1px solid transparent; background: transparent; border-radius: 8px;
+  padding: 8px 10px; cursor: pointer; }
+.item:hover { background: var(--chip); }
+.item.activo { background: var(--panel); border-color: var(--line); box-shadow: var(--shadow); }
+.item .n { font-weight: 560; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item .m { color: var(--muted); font-size: 12px; }
+.vacio { color: var(--muted); padding: 24px 8px; }
+
+/* --- ficha del correo ---------------------------------------------------- */
+.cab { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.cab h1 { font-size: 22px; margin: 0; letter-spacing: -.015em; }
+.chip { display: inline-block; background: var(--chip); border-radius: 999px; padding: 1px 9px;
+  font-size: 12px; color: var(--muted); }
+.chip.verificado, .chip.aprobado, .chip.interesado { background: var(--accent-soft); color: var(--accent); }
+.chip.dudoso, .chip.respondió { background: var(--warn-bg); color: var(--warn); }
+.chip.rechazado, .chip.baja, .chip.rebotó { background: var(--bad-bg); color: var(--bad); }
+.linea { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 12px 0 18px; color: var(--muted); }
+.linea input { min-width: 260px; }
+
+.cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 1200px) { .cols { grid-template-columns: 1fr; } }
+.caja { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+.caja h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+.caja + .caja { margin-top: 14px; }
+
+input[type=text], input[type=email], select, textarea {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+textarea { width: 100%; resize: vertical; }
+.correo + .correo { margin-top: 20px; padding-top: 18px; border-top: 1px dashed var(--line); }
+.correo .t { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.correo .t b { font-weight: 600; }
+.correo .t small { color: var(--muted); font-variant-numeric: tabular-nums; }
+.correo .t small.pasa { color: var(--bad); font-weight: 600; }
+.asunto { width: 100%; margin-bottom: 8px; font-weight: 560; }
+.cuerpo { min-height: 200px; font-size: 15px; line-height: 1.6; }
+.firma { white-space: pre-wrap; color: var(--muted); font-size: 13px; margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--line); }
+textarea[readonly], input[readonly] { opacity: .8; }
+
+.hallazgos { margin: 0; padding: 0; list-style: none; }
+.hallazgos li { padding: 7px 0; border-bottom: 1px solid var(--line); }
+.hallazgos li:last-child { border-bottom: 0; }
+.hallazgos a { font-size: 12px; margin-left: 4px; white-space: nowrap; }
+.obs { background: var(--accent-soft); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.obs b { display: block; font-size: 12px; color: var(--accent); margin-bottom: 2px; }
+.check { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; cursor: pointer; }
+.check input { margin-top: 4px; accent-color: var(--accent); }
+.check span { overflow-wrap: anywhere; }
+.nota-chica { color: var(--muted); font-size: 12px; margin: -2px 0 6px; }
+.caja.resalta { outline: 2px solid var(--warn); outline-offset: 2px; }
+.porque { border: 0; background: none; color: var(--warn); cursor: pointer; font: inherit; font-size: 13px; padding: 0; text-align: right; }
+.porque:hover { text-decoration: underline; }
+details summary { cursor: pointer; color: var(--muted); }
+details pre { white-space: pre-wrap; font-size: 12px; max-height: 420px; overflow: auto; background: var(--bg); padding: 10px; border-radius: 8px; }
+
+.afinar { display: flex; gap: 8px; align-items: flex-start; }
+.afinar textarea { min-height: 42px; }
+.notas { color: var(--muted); font-size: 12px; margin-top: 8px; }
+
+.problemas { margin: 0; padding-left: 18px; color: var(--bad); }
+.avisos { margin: 6px 0 0; padding-left: 18px; color: var(--warn); }
+.timeline { margin: 0; padding-left: 18px; }
+
+/* --- barra de acciones --------------------------------------------------- */
+.acciones { position: fixed; bottom: 0; left: 290px; right: 0; display: flex; gap: 10px; align-items: center;
+  padding: 12px 24px; background: color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter: blur(6px); border-top: 1px solid var(--line); flex-wrap: wrap; }
+@media (max-width: 900px) { .acciones { left: 0; padding: 10px 16px; } }
+.acciones .esp { flex: 1; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-weight: 560; }
+.btn:hover:not(:disabled) { border-color: var(--muted); }
+.btn.prim { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.malo { color: var(--bad); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.guardado { color: var(--muted); font-size: 12px; }
+
+.toast { position: fixed; right: 20px; bottom: 76px; background: var(--ink); color: var(--panel);
+  padding: 10px 14px; border-radius: 8px; max-width: 420px; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  opacity: 0; transform: translateY(6px); transition: .2s; pointer-events: none; z-index: 10; }
+.toast.ver { opacity: 1; transform: none; }
+.toast.error { background: var(--bad); color: #fff; }
+.girando::after { content: ""; display: inline-block; width: 12px; height: 12px; margin-left: 8px; vertical-align: -1px;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: g .8s linear infinite; }
+@keyframes g { to { transform: rotate(360deg); } }
+
+/* --- pestañas ------------------------------------------------------------ */
+.tabs { display: flex; gap: 2px; background: var(--chip); border-radius: 9px; padding: 3px; }
+.tab { border: 0; background: transparent; padding: 4px 14px; border-radius: 7px; cursor: pointer;
+  color: var(--muted); font-weight: 560; }
+.tab.activo { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+
+/* --- radar --------------------------------------------------------------- */
+.radar { padding: 16px 20px 48px; }
+.rastreo { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.rastreo input { width: 260px; max-width: 100%; }
+.rastreo small { color: var(--muted); }
+.trabajos { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.trabajos .bad { color: var(--bad); }
+.trabajos .ok { color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; margin: 14px 0 12px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 9px 13px;
+  text-align: left; cursor: pointer; }
+.kpi:hover { border-color: var(--muted); }
+.kpi b { display: block; font-size: 22px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--muted); font-size: 12px; }
+.kpi.activo { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.herramientas { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.herramientas input[type=search] { flex: 1; min-width: 180px; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 10px; }
+.herramientas small { color: var(--muted); margin-left: auto; }
+.radar-grid { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 16px; align-items: start; }
+.filas { display: flex; flex-direction: column; gap: 6px; }
+.fila { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 12px; align-items: start;
+  text-align: left; width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 12px; cursor: pointer; }
+.fila:hover { border-color: var(--muted); }
+.fila.activo { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.fila.apagada { opacity: .6; }
+.fila .n { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fila .m { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fila .derecha { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.nota-op { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; font-weight: 700;
+  font-size: 17px; background: var(--chip); color: var(--muted); font-variant-numeric: tabular-nums; }
+.nota-op.alta { background: var(--accent); color: var(--accent-ink); }
+.nota-op.media { background: var(--accent-soft); color: var(--accent); }
+.senales { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.s { font-size: 11.5px; border-radius: 6px; padding: 1px 7px; background: var(--chip); color: var(--muted); }
+.s.paga { background: var(--accent-soft); color: var(--accent); }
+.s.falta { background: var(--warn-bg); color: var(--warn); }
+.chip.candidata, .chip.listo { background: var(--accent-soft); color: var(--accent); }
+.chip.floja, .chip.sin-correo, .chip.investigando { background: var(--warn-bg); color: var(--warn); }
+.chip.descartada { background: var(--chip); color: var(--muted); }
+.ficha-radar { position: sticky; top: 66px; max-height: calc(100vh - 82px); overflow: auto; }
+.ficha-radar h2.t { font-size: 19px; margin: 0 0 6px; letter-spacing: -.01em; text-transform: none; color: var(--ink); }
+.ficha-radar .chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.ficha-radar .chips a { font-size: 13px; }
+.dl { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 4px 10px; margin: 0; }
+.dl dt { color: var(--muted); }
+.dl dd { margin: 0; overflow-wrap: anywhere; }
+.ficha-radar ul { margin: 0; padding-left: 18px; }
+.ficha-radar .accion { margin: 12px 0 2px; }
+.ficha-radar .accion small { display: block; color: var(--muted); margin-top: 6px; }
+.cerrar { display: none; }
+@media (max-width: 1100px) {
+  .radar-grid { grid-template-columns: 1fr; }
+  .ficha-radar { position: fixed; inset: 0; max-height: none; z-index: 20; border-radius: 0; padding: 16px; }
+  .ficha-radar.vacia { display: none; }
+  .cerrar { display: inline-block; margin-bottom: 10px; }
+}
+@media (max-width: 600px) {
+  .radar { padding: 12px 16px 40px; }
+  .fila { grid-template-columns: 36px minmax(0, 1fr); }
+  .fila .derecha { grid-column: 2; align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
+  .nota-op { width: 36px; height: 36px; font-size: 15px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <span class="marca">Prospector</span>
+  <nav class="tabs">
+    <button class="tab" id="tab-correos" onclick="mostrar('correos')">Correos</button>
+    <button class="tab" id="tab-radar" onclick="mostrar('radar')">Radar</button>
+  </nav>
+  <span class="contadores" id="contadores"></span>
+  <span class="envio" id="envio"></span>
+</header>
+<div id="banners"></div>
+<section class="radar" id="vista-radar" hidden>
+  <div class="rastreo">
+    <input type="text" id="comuna" list="comunas" placeholder="Comuna o ciudad, p. ej. Providencia"
+      onkeydown="if (event.key === 'Enter') rastrear(document.getElementById('btn-rastrear'))">
+    <datalist id="comunas"></datalist>
+    <button class="btn prim" id="btn-rastrear" onclick="rastrear(this)">Rastrear</button>
+    <small>Busca negocios de tu rubro en Google Maps y visita sus webs. Tarda unos minutos y no contacta a nadie.</small>
+  </div>
+  <div class="trabajos" id="trabajos"></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="herramientas">
+    <input type="search" id="buscar" placeholder="Buscar por nombre, web, correo…" oninput="pintarRadar()">
+    <select id="f-comuna" onchange="pintarRadar()"></select>
+    <select id="f-orden" onchange="pintarRadar()">
+      <option value="puntaje">Más oportunidad primero</option>
+      <option value="rating">Mejor nota en Google</option>
+      <option value="nombre">Nombre</option>
+      <option value="reciente">Más recientes</option>
+    </select>
+    <small id="cuantas"></small>
+  </div>
+  <div class="radar-grid">
+    <div class="filas" id="filas"></div>
+    <div class="caja ficha-radar vacia" id="ficha-radar"><p class="vacio">Elige un negocio para ver su ficha.</p></div>
+  </div>
+</section>
+<div class="app" id="vista-correos">
+  <aside>
+    <div class="filtros" id="filtros"></div>
+    <div class="lista" id="lista"></div>
+  </aside>
+  <main id="main"><p class="vacio">Elige un negocio de la lista.</p></main>
+</div>
+<div class="acciones" id="acciones" hidden></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const GRUPOS = [
+  ["Por revisar", ["por revisar"]],
+  ["En cola", ["aprobado"]],
+  ["En curso", ["enviando"]],
+  ["Respondieron", ["respondió", "interesado", "retomar"]],
+  ["Cerrados", ["terminado", "rechazado", "rebotó", "baja", "descartada"]],
+];
+const EDITABLES = ["por revisar", "aprobado", "rechazado"];
+const MAX_PALABRAS = 120;
+
+let estado = {}, lista = [], filtro = 0, actual = null, temporizador = null;
+
+// --- utilidades --------------------------------------------------------------
+function h(tag, props = {}, ...hijos) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v === undefined || v === null || v === false) continue;
+    if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "class") el.className = v;
+    else if (k in el && k !== "list") el[k] = v;
+    else el.setAttribute(k, v);
+  }
+  for (const c of hijos.flat()) if (c !== null && c !== undefined && c !== false)
+    el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  return el;
+}
+// replaceChildren pintaría un null como el texto "null": se filtran antes.
+const llenar = (el, ...hijos) => el.replaceChildren(...hijos.flat().filter((c) => c !== null && c !== undefined && c !== false));
+const $ = (id) => document.getElementById(id);
+const palabras = (t) => (t || "").match(/[\p{L}\p{N}_]+/gu)?.length || 0;
+const hora = (iso) => iso ? new Date(iso).toLocaleString("es-CL", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+const enlace = (url, texto) => /^https?:\/\//.test(url || "") ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer" }, texto) : null;
+// Las URLs largas de "Comprueba" rompían la caja: se vuelven un enlace corto.
+const conEnlaces = (texto) => String(texto || "").split(/(https?:\/\/\S+)/)
+  .map((t, i) => i % 2 ? enlace(t.replace(/[).,;]+$/, ""), "abrir ↗") : t);
+
+async function api(ruta, cuerpo) {
+  const opciones = cuerpo === undefined ? {} : {
+    method: "POST", headers: { "Content-Type": "application/json", "X-Panel": "1" }, body: JSON.stringify(cuerpo),
+  };
+  const r = await fetch(ruta, opciones);
+  const datos = await r.json();
+  if (!r.ok) throw new Error(datos.error || r.statusText);
+  return datos;
+}
+
+function aviso(texto, error = false) {
+  const t = $("toast");
+  t.textContent = texto;
+  t.className = "toast ver" + (error ? " error" : "");
+  clearTimeout(aviso.t);
+  aviso.t = setTimeout(() => t.className = "toast", error ? 7000 : 3000);
+}
+
+// --- barra superior ----------------------------------------------------------
+async function cargarEstado() {
+  estado = await api("/api/estado");
+  const c = estado.conteos || {};
+  const suma = (estados) => estados.reduce((n, e) => n + (c[e] || 0), 0);
+  llenar($("contadores"), 
+    h("span", {}, h("b", {}, suma(["por revisar"])), " por revisar"),
+    h("span", {}, h("b", {}, suma(["aprobado"])), " en cola"),
+    h("span", {}, h("b", {}, `${estado.enviados_hoy}/${estado.max_dia}`), " nuevos hoy"),
+    h("span", {}, h("b", {}, suma(["respondió", "interesado", "retomar"])), " respondieron"),
+  );
+
+  let detalleEnvio;
+  if (!estado.gmail) detalleEnvio = "Gmail sin configurar";
+  else if (!estado.activo) detalleEnvio = "Envíos pausados";
+  else if (!estado.en_horario) detalleEnvio = `Fuera de horario (L-V ${estado.horario} h)`;
+  else detalleEnvio = estado.proximo && new Date(estado.proximo) > new Date()
+    ? `Próximo envío ${hora(estado.proximo)}` : "Enviando cuando haya cola";
+  llenar($("envio"), 
+    h("span", { class: "punto" + (estado.activo && estado.gmail ? " on" : "") }),
+    h("small", {}, detalleEnvio),
+    h("button", {
+      class: "btn" + (estado.activo ? "" : " prim"), disabled: !estado.gmail,
+      title: estado.gmail ? `Desde ${estado.usuario}` : "Pon GMAIL_USUARIO y GMAIL_CLAVE_APP en el .env",
+      onclick: async () => { await api("/api/envio", { activo: !estado.activo }); cargarEstado(); },
+    }, estado.activo ? "Pausar envíos" : "Activar envíos"),
+  );
+
+  const banners = [];
+  if (estado.error) banners.push(h("div", { class: "banner bad" }, estado.error));
+  if (!estado.firma || /\{[^}]*\}/.test(estado.firma))
+    banners.push(h("div", { class: "banner warn" }, "Falta tu firma: corre python prospector.py iniciar. Hasta entonces no se puede aprobar nada."));
+  if (!estado.gmail)
+    banners.push(h("div", { class: "banner warn" }, "Para enviar: pon GMAIL_USUARIO y GMAIL_CLAVE_APP en el .env y reinicia el panel. Revisar y afinar funciona igual sin eso."));
+  llenar($("banners"), ...banners);
+}
+
+// --- lista -------------------------------------------------------------------
+async function cargarLista() {
+  lista = await api("/api/borradores");
+  pintarLista();
+}
+
+function pintarLista() {
+  llenar($("filtros"), ...GRUPOS.map(([nombre, estados], i) => {
+    const n = lista.filter((b) => estados.includes(b.estado)).length;
+    return h("button", { class: "filtro" + (i === filtro ? " activo" : ""), onclick: () => { filtro = i; pintarLista(); } }, `${nombre} ${n}`);
+  }));
+  const visibles = lista.filter((b) => GRUPOS[filtro][1].includes(b.estado));
+  llenar($("lista"), ...(visibles.length ? visibles.map((b) =>
+    h("button", { class: "item" + (actual && actual.dominio === b.dominio ? " activo" : ""), onclick: () => abrir(b.dominio) },
+      h("span", { class: "n" }, b.nombre),
+      h("span", { class: "m" }, [b.comuna, b.para || "sin correo", b.envios ? `${b.envios} enviados` : ""].filter(Boolean).join(" · ")),
+    )) : [h("p", { class: "vacio" }, "Nada por aquí.")]));
+}
+
+// --- detalle -----------------------------------------------------------------
+async function abrir(dominio) {
+  actual = await api("/api/borradores/" + encodeURIComponent(dominio));
+  pintarLista();
+  pintar();
+}
+
+const editable = () => EDITABLES.includes(actual.estado);
+
+function cambiar() {
+  pintarRevision();
+  $("guardado").textContent = "Guardando…";
+  clearTimeout(temporizador);
+  temporizador = setTimeout(guardar, 700);
+}
+
+async function guardar() {
+  clearTimeout(temporizador);
+  if (!actual || !editable()) return;
+  const { para, correo_estado, correos, nota, comprobado } = actual;
+  try {
+    const nuevo = await api(`/api/borradores/${actual.dominio}`, { para, correo_estado, correos, nota, comprobado });
+    actual.problemas = nuevo.problemas; actual.avisos = nuevo.avisos;
+    $("guardado").textContent = "Guardado";
+    pintarRevision();
+  } catch (e) { $("guardado").textContent = "No se guardó: " + e.message; }
+}
+
+async function accion(nombre, cuerpo = {}, boton) {
+  if (boton) { boton.disabled = true; boton.classList.add("girando"); }
+  try {
+    await guardar();
+    actual = await api(`/api/borradores/${actual.dominio}/${nombre}`, cuerpo);
+    pintar(); await Promise.all([cargarLista(), cargarEstado()]);
+    return true;
+  } catch (e) { aviso(e.message, true); return false; }
+  finally { if (boton) { boton.disabled = false; boton.classList.remove("girando"); } }
+}
+
+function pintar() {
+  const b = actual, ed = editable();
+  b.comprobado = b.comprobado || [];
+  const d = b.decisor || {};
+
+  const correos = (b.correos || []).map((c, i) => {
+    const contador = h("small", {});
+    const contar = () => {
+      const n = palabras(c.cuerpo);
+      contador.textContent = i === 0 ? `${n}/${MAX_PALABRAS} palabras` : `${n} palabras`;
+      contador.className = i === 0 && n > MAX_PALABRAS ? "pasa" : "";
+    };
+    contar();
+    const area = h("textarea", { class: "cuerpo", value: c.cuerpo || "", readOnly: !ed,
+      oninput: (e) => { c.cuerpo = e.target.value; contar(); ajustar(e.target); cambiar(); } });
+    return h("div", { class: "correo" },
+      h("div", { class: "t" }, h("b", {}, `Correo ${i + 1} · día ${c.dia}${i ? " · mismo hilo" : ""}`), contador),
+      i === 0 ? h("input", { type: "text", class: "asunto", value: c.asunto || "", placeholder: "Asunto", readOnly: !ed,
+        oninput: (e) => { c.asunto = e.target.value; cambiar(); } }) : null,
+      area,
+      i === 0 ? h("div", { class: "firma" }, b.firma || "(sin firma)") : null,
+    );
+  });
+
+  const comprobar = (b.comprobar || []).map((texto, i) => h("label", { class: "check" },
+    h("input", { type: "checkbox", checked: !!b.comprobado[i], disabled: !ed,
+      onchange: (e) => { b.comprobado[i] = e.target.checked; cambiar(); } }),
+    h("span", {}, ...conEnlaces(texto))));
+
+  const envios = (b.envios || []).map((e) => h("li", {}, `Correo ${e.paso + 1} · ${hora(e.fecha)} · ${e.para}`));
+
+  llenar($("main"), 
+    h("div", { class: "cab" },
+      h("h1", {}, b.nombre),
+      h("span", { class: "chip " + b.estado }, b.estado),
+      b.comuna ? h("span", { class: "chip" }, b.comuna) : null,
+      enlace(b.web, (b.web || "").replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")),
+    ),
+    h("div", { class: "linea" },
+      "Para",
+      h("input", { type: "email", value: b.para || "", readOnly: !ed, oninput: (e) => { b.para = e.target.value; cambiar(); } }),
+      h("select", { disabled: !ed, onchange: (e) => { b.correo_estado = e.target.value; cambiar(); } },
+        ...["verificado", "dudoso", "supuesto"].map((v) => h("option", { value: v, selected: v === b.correo_estado }, v))),
+      d.nombre ? h("span", {}, "Decisor: ", h("b", {}, d.nombre), d.cargo ? `, ${d.cargo} ` : " ", enlace(d.fuente, "fuente")) : h("span", {}, "Decisor sin identificar"),
+    ),
+    b.motivo ? h("div", { class: "banner warn", style: "margin:0 0 14px" }, b.motivo) : null,
+    b.estado === "respondió" ? respuestaBox() : null,
+    h("div", { class: "cols" },
+      h("div", {},
+        h("div", { class: "caja" }, h("h2", {}, "Los tres correos"), ...correos),
+        ed ? h("div", { class: "caja" },
+          h("h2", {}, "Afinar con Claude"),
+          h("div", { class: "afinar" },
+            h("textarea", { id: "nota", rows: 2, value: b.nota || "", placeholder: estado.claude ? "Qué cambiarías: «más corto», «menciona su blog», «menos formal»…" : "No encuentro el comando claude: edita a mano.",
+              oninput: (e) => { b.nota = e.target.value; cambiar(); } }),
+            h("button", { class: "btn", disabled: !estado.claude, onclick: (e) => {
+              const nota = $("nota").value.trim();
+              if (!nota) return aviso("Escribe qué quieres cambiar", true);
+              aviso("Claude está reescribiendo. Tarda entre 20 segundos y un minuto…");
+              accionAfinar(nota, e.currentTarget);
+            } }, "Afinar"),
+            h("button", { class: "btn", disabled: !(b.historial || []).length, onclick: (e) => accion("deshacer", {}, e.currentTarget) }, "Deshacer"),
+          ),
+          (b.notas || []).length ? h("div", { class: "notas" }, "Ya pediste: " + b.notas.map((n) => `«${n.nota}»`).join(" · ")) : null,
+        ) : null,
+        envios.length ? h("div", { class: "caja" }, h("h2", {}, "Enviados"), h("ul", { class: "timeline" }, ...envios)) : null,
+      ),
+      h("div", {},
+        comprobar.length ? h("div", { class: "caja", id: "comprobar" },
+          h("h2", { id: "comprobar-t" }, "Comprueba antes de aprobar"),
+          h("p", { class: "nota-chica" }, "Si alguna resulta falsa, el correo diría algo que no es: corrígelo antes de aprobar."),
+          ...comprobar) : null,
+        h("div", { class: "caja" },
+          h("h2", {}, "Lo que vimos"),
+          b.observacion ? h("div", { class: "obs" }, h("b", {}, "Observación elegida"), b.observacion) : null,
+          b.falta ? h("p", {}, h("b", {}, "Le falta: "), b.falta) : null,
+          h("ul", { class: "hallazgos" }, ...(b.investigacion || []).map((x) => h("li", {}, x.dato, " ", enlace(x.fuente, "fuente ↗")))),
+        ),
+        (b.contexto || []).length ? h("div", { class: "caja" },
+          h("h2", {}, "Para cuando responda"),
+          h("p", { class: "nota-chica" }, "No bloquea nada: míralo solo si te contesta."),
+          h("ul", { class: "hallazgos" }, ...b.contexto.map((t) => h("li", {}, ...conEnlaces(t))))) : null,
+        b.ficha ? h("div", { class: "caja" }, h("details", {}, h("summary", {}, "Ficha técnica (lo que midió el código)"), h("pre", {}, b.ficha))) : null,
+      ),
+    ),
+    h("div", { class: "caja", id: "revision", style: "margin-top:14px" }),
+  );
+  document.querySelectorAll("textarea.cuerpo").forEach(ajustar);
+  pintarRevision();
+  pintarAcciones();
+  window.scrollTo({ top: 0 });
+}
+
+function ajustar(t) { t.style.height = "auto"; t.style.height = Math.max(t.scrollHeight + 2, 120) + "px"; }
+
+async function accionAfinar(nota, boton) {
+  clearTimeout(temporizador);
+  await guardar();
+  boton.disabled = true; boton.classList.add("girando");
+  try {
+    actual = await api(`/api/borradores/${actual.dominio}/afinar`, { nota });
+    pintar(); aviso("Listo. Si no te gusta, Deshacer.");
+  } catch (e) { aviso(e.message, true); }
+  finally { boton.disabled = false; boton.classList.remove("girando"); }
+}
+
+function respuestaBox() {
+  const opciones = [["si", "Sí, mándalo"], ["info", "Envíame información"], ["ahora_no", "Ahora no (60 días)"], ["baja", "No le interesa / baja"]];
+  return h("div", { class: "banner warn", style: "margin:0 0 14px" },
+    h("b", {}, "Te respondió. "), "Léelo en Gmail y dime qué dijo: ",
+    ...opciones.map(([tipo, texto]) => h("button", { class: "btn", style: "margin-left:6px", onclick: (e) => accion("respuesta", { tipo }, e.currentTarget) }, texto)));
+}
+
+function pintarRevision() {
+  const caja = $("revision");
+  if (!caja) return;
+  const p = actual.problemas || [], a = actual.avisos || [];
+  caja.hidden = !p.length && !a.length;
+  llenar(caja, 
+    h("h2", {}, p.length ? "Antes de aprobar" : "Ojo"),
+    p.length ? h("ul", { class: "problemas" }, ...p.map((x) => h("li", {}, x))) : null,
+    a.length ? h("ul", { class: "avisos" }, ...a.map((x) => h("li", {}, x))) : null,
+  );
+  const aprobar = $("btn-aprobar");
+  if (aprobar) { aprobar.disabled = p.length > 0; aprobar.title = p.join("\n"); }
+  // El porqué del botón gris, al lado del botón: si no, no se ve.
+  const falta = $("porque");
+  if (falta) {
+    falta.hidden = !p.length;
+    falta.textContent = p.length ? p[0] + (p.length > 1 ? ` (y ${p.length - 1} más)` : "") + "  →" : "";
+  }
+  const t = $("comprobar-t");
+  if (t) {
+    const total = (actual.comprobar || []).length;
+    const hechas = (actual.comprobado || []).slice(0, total).filter(Boolean).length;
+    t.textContent = `Comprueba antes de aprobar · ${hechas}/${total}`;
+  }
+}
+
+function irAlProblema() {
+  const p = actual.problemas || [];
+  const destino = (/comprobar/.test(p[0] || "") && $("comprobar")) || $("revision");
+  if (!destino) return;
+  destino.scrollIntoView({ behavior: "smooth", block: "center" });
+  destino.classList.add("resalta");
+  setTimeout(() => destino.classList.remove("resalta"), 1600);
+}
+
+function pintarAcciones() {
+  const b = actual, barra = $("acciones");
+  const botones = [];
+  const prueba = h("button", { class: "btn", disabled: !estado.gmail, title: estado.gmail ? `Los 3 correos a ${estado.usuario}, en un hilo` : "Configura Gmail en el .env",
+    onclick: async (e) => { if (await accion("prueba", {}, e.currentTarget)) aviso(`Mira tu bandeja: te llegaron los 3 correos a ${estado.usuario}.`); } }, "Enviarme prueba");
+  if (b.estado === "por revisar") {
+    botones.push(
+      h("button", { class: "btn malo", onclick: (e) => { const motivo = prompt("¿Por qué no le escribes? (opcional)") ?? null; if (motivo !== null) accion("rechazar", { motivo }, e.currentTarget); } }, "Rechazar"),
+      prueba, h("span", { class: "guardado", id: "guardado" }), h("span", { class: "esp" }),
+      h("button", { class: "porque", id: "porque", onclick: irAlProblema }),
+      h("button", { class: "btn prim", id: "btn-aprobar", onclick: async (e) => { if (await accion("aprobar", {}, e.currentTarget)) aviso("Aprobado: está en la cola."); } }, "Aprobar → cola"));
+  } else if (b.estado === "aprobado") {
+    botones.push(
+      h("button", { class: "btn", onclick: (e) => accion("devolver", {}, e.currentTarget) }, "Devolver a revisión"),
+      prueba, h("span", { class: "guardado", id: "guardado" }), h("span", { class: "esp" }),
+      h("span", { class: "guardado" }, "En la cola: sale cuando le toque."));
+  } else if (b.estado === "rechazado") {
+    botones.push(h("button", { class: "btn", onclick: (e) => accion("devolver", {}, e.currentTarget) }, "Devolver a revisión"),
+      h("span", { class: "guardado", id: "guardado" }));
+  } else {
+    botones.push(h("span", { class: "guardado", id: "guardado" }, b.estado === "enviando" ? "En curso: los seguimientos salen solos y paran si responde." : ""));
+  }
+  llenar(barra, ...botones);
+  barra.hidden = vista !== "correos";
+  pintarRevision();
+}
+
+// --- pestañas ----------------------------------------------------------------
+let vista = "correos";
+
+function mostrar(v) {
+  vista = v;
+  try { localStorage.setItem("prospector-vista", v); } catch {}
+  if (location.hash !== "#" + v) history.replaceState(null, "", "#" + v);
+  $("vista-radar").hidden = v !== "radar";
+  $("vista-correos").hidden = v !== "correos";
+  $("acciones").hidden = v !== "correos" || !actual;
+  $("tab-correos").classList.toggle("activo", v === "correos");
+  $("tab-radar").classList.toggle("activo", v === "radar");
+  if (v === "radar") cargarRadar().catch((e) => aviso("No pude cargar el radar: " + e.message, true));
+}
+
+// --- radar -------------------------------------------------------------------
+// Cada tarjeta de arriba es también un filtro.
+const KPIS = [
+  ["escribir", "Para escribir", (f) => f.estado === "candidata" && !f.borrador && !f.bloqueado],
+  ["borrador", "Con borrador", (f) => !!f.borrador],
+  ["sincorreo", "Sin correo", (f) => f.estado === "sin correo" && !f.borrador],
+  ["flojas", "Flojas", (f) => f.estado === "floja" && !f.borrador],
+  ["descartadas", "Descartadas", (f) => ["descartada", "baja"].includes(f.estado) && !f.borrador],
+  ["todas", "Todas", () => true],
+];
+const INVESTIGABLES = ["candidata", "sin correo", "floja"];
+const ETIQUETAS = { "por revisar": "borrador por revisar", aprobado: "en cola", descartada: "descartada al investigar" };
+
+let radar = { filas: [], trabajos: {}, comunas: [] }, kpi = "escribir", fichaR = null, huella = "";
+
+const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
+const nivel = (p) => p >= 6 ? "alta" : p >= 4 ? "media" : "";
+const sinWww = (u) => (u || "").replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+const horaCorta = (iso) => iso ? new Date(iso).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }) : "";
+const huellaDe = (t) => JSON.stringify([t.busqueda?.fase, t.busqueda?.inicio, (t.investigando || []).map((i) => i.clave), (t.terminadas || []).length]);
+const ocupado = (t) => ["buscando", "analizando"].includes(t.busqueda?.fase) || (t.investigando || []).length > 0;
+
+async function cargarRadar() {
+  radar = await api("/api/radar");
+  huella = huellaDe(radar.trabajos);
+  llenar($("comunas"), ...radar.comunas.map((c) => h("option", { value: c })));
+  if (radar.comunas.length) $("comuna").placeholder = `Comuna o ciudad, p. ej. ${radar.comunas[0]}`;
+  const sel = $("f-comuna"), antes = sel.value;
+  const comunas = [...new Set(radar.filas.map((f) => f.comuna).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+  llenar(sel, h("option", { value: "" }, "Todas las comunas"),
+    ...comunas.map((c) => h("option", { value: c, selected: c === antes }, c)));
+  pintarTrabajos();
+  pintarRadar();
+  if (fichaR) abrirFicha(fichaR.clave);
+}
+
+function pintarTrabajos() {
+  const t = radar.trabajos || {}, b = t.busqueda || {}, items = [];
+  const activa = ["buscando", "analizando"].includes(b.fase);
+  $("btn-rastrear").disabled = activa;
+  $("btn-rastrear").classList.toggle("girando", activa);
+  if (activa) items.push(h("div", {}, `Rastreando ${b.comuna}: ${b.mensaje}`));
+  else if (b.fase === "listo") items.push(h("div", { class: "ok" }, `✓ ${b.mensaje} (${horaCorta(b.fin)})`));
+  else if (b.fase === "error") items.push(h("div", { class: "bad" }, `No pude rastrear ${b.comuna}: ${b.mensaje}`));
+  for (const i of t.investigando || [])
+    items.push(h("div", {}, h("span", { class: "girando" }), ` Investigando ${i.nombre} desde las ${horaCorta(i.inicio)}. Son unos 10 minutos.`));
+  const recientes = (t.terminadas || []).filter((x) => Date.now() - new Date(x.fin) < 30 * 60e3).reverse();
+  for (const x of recientes)
+    items.push(h("div", { class: x.estado === "error" ? "bad" : "ok" },
+      `${x.estado === "error" ? "No salió" : "✓"} ${x.nombre}: ${x.estado}${x.mensaje ? " · " + x.mensaje : ""}`));
+  if (!t.claude) items.push(h("div", { class: "bad" }, "No encuentro el comando claude: investigar desde aquí no funciona."));
+  llenar($("trabajos"), ...items);
+}
+
+function pintarRadar() {
+  const filas = radar.filas || [];
+  llenar($("kpis"), ...KPIS.map(([id, nombre, fn]) =>
+    h("button", { class: "kpi" + (kpi === id ? " activo" : ""), onclick: () => { kpi = id; pintarRadar(); } },
+      h("b", {}, filas.filter(fn).length), h("span", {}, nombre))));
+  const q = norm($("buscar").value), comuna = $("f-comuna").value, orden = $("f-orden").value;
+  const visibles = filas.filter(KPIS.find((k) => k[0] === kpi)[2])
+    .filter((f) => !comuna || f.comuna === comuna)
+    .filter((f) => !q || norm([f.nombre, f.web, f.correo, f.categoria, f.direccion].join(" ")).includes(q));
+  // "puntaje" ya viene ordenado del servidor: candidatas primero y de más a menos.
+  if (orden === "rating") visibles.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+  else if (orden === "nombre") visibles.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  else if (orden === "reciente") visibles.sort((a, b) => (b.descubierta || "").localeCompare(a.descubierta || ""));
+  $("cuantas").textContent = `${visibles.length} de ${filas.length}`;
+  llenar($("filas"), ...(visibles.length ? visibles.map(filaRadar)
+    : [h("p", { class: "vacio" }, filas.length ? "Nada con estos filtros." : "Aún no hay negocios: rastrea una comuna o ciudad arriba.")]));
+}
+
+function chipEstado(f) {
+  if (f.investigando) return h("span", { class: "chip investigando girando" }, "investigando");
+  if (f.borrador) return h("span", { class: "chip " + f.borrador }, ETIQUETAS[f.borrador] || f.borrador);
+  return h("span", { class: "chip " + (f.estado || "").replace(" ", "-") }, f.estado);
+}
+
+const apagada = (f) => ["descartada", "baja"].includes(f.estado) || f.borrador === "descartada" || f.bloqueado;
+
+function filaRadar(f) {
+  const off = apagada(f);
+  return h("button", { class: "fila" + (fichaR && fichaR.clave === f.clave ? " activo" : "") + (off ? " apagada" : ""),
+    onclick: () => abrirFicha(f.clave) },
+    h("span", { class: "nota-op " + nivel(f.puntaje), title: "Oportunidad: puede pagar + le falta algo" }, off && !f.puntaje ? "—" : f.puntaje),
+    h("span", {},
+      h("span", { class: "n" }, f.nombre),
+      h("span", { class: "m" }, [(f.categoria || "").split(",")[0], f.comuna, f.rating ? `★ ${f.rating}` : ""].filter(Boolean).join(" · ")),
+      h("span", { class: "m" }, [f.correo ? `${f.correo}${f.correo_estado ? ` (${f.correo_estado})` : ""}` : "sin correo",
+        f.telefono, sinWww(f.web)].filter(Boolean).join(" · ")),
+      off && f.motivo ? h("span", { class: "m" }, f.motivo) : h("span", { class: "senales" },
+        ...f.puede_pagar.slice(0, 3).map((x) => h("span", { class: "s paga" }, "+ " + x)),
+        ...f.le_falta.slice(0, 2).map((x) => h("span", { class: "s falta" }, "− " + x))),
+    ),
+    h("span", { class: "derecha" }, chipEstado(f)),
+  );
+}
+
+async function abrirFicha(clave) {
+  try { fichaR = await api("/api/radar/" + encodeURIComponent(clave)); }
+  catch (e) { return aviso(e.message, true); }
+  pintarFicha();
+  pintarRadar();
+}
+
+function cerrarFicha() {
+  fichaR = null;
+  const caja = $("ficha-radar");
+  caja.classList.add("vacia");
+  llenar(caja, h("p", { class: "vacio" }, "Elige un negocio para ver su ficha."));
+  pintarRadar();
+}
+
+const bloque = (titulo, ...hijos) => h("div", { style: "margin-top:16px" }, h("h2", {}, titulo), ...hijos);
+const par = (k, v) => [h("dt", {}, k), h("dd", {}, v)];
+const si = (v) => v ? "sí" : "no";
+
+function pintarFicha() {
+  const d = fichaR, a = d.analisis || {}, caja = $("ficha-radar");
+  caja.classList.remove("vacia");
+  const maps = d.lat && d.lng ? `https://www.google.com/maps/search/?api=1&query=${d.lat},${d.lng}` : "";
+  const consulta = a.fecha ? [`WhatsApp ${si(a.whatsapp)}`, `chat ${si((a.chat || []).length)}`,
+    `formulario ${si(a.formulario)}`, `teléfono ${si(a.telefono)}`].join(" · ") : "";
+  const paginas = Object.entries(a.paginas || {});
+  llenar(caja,
+    h("button", { class: "btn cerrar", onclick: cerrarFicha }, "← Volver a la lista"),
+    h("h2", { class: "t" }, d.nombre),
+    h("div", { class: "chips" },
+      h("span", { class: "nota-op " + nivel(d.puntaje), style: "width:30px;height:30px;font-size:14px;border-radius:8px" },
+        apagada(d) && !d.puntaje ? "—" : d.puntaje),
+      chipEstado(d), d.tipo ? h("span", { class: "chip" }, d.tipo) : null,
+      enlace(d.web, sinWww(d.web) + " ↗"), enlace(maps, "Maps ↗")),
+    d.motivo ? h("div", { class: "banner warn", style: "margin:0 0 4px" }, d.motivo) : null,
+    accionFicha(d),
+    bloque("Contacto", h("dl", { class: "dl" },
+      par("Correo", d.correo ? [d.correo, " ", h("span", { class: "chip " + d.correo_estado }, d.correo_estado || "?")] : "No publica uno usable"),
+      par("Teléfono", d.telefono || "—"),
+      par("Dirección", d.direccion || "—"),
+      par("Google", d.rating ? `${d.rating} ★` : "sin nota"),
+      par("Categoría", d.categoria || "—"),
+      par("Encontrada", [d.comuna, d.descubierta].filter(Boolean).join(" · ")))),
+    d.puede_pagar.length || d.le_falta.length ? bloque(`Por qué tiene ${d.puntaje} de oportunidad`,
+      d.puede_pagar.length ? [h("b", {}, "Puede pagar"), h("ul", {}, ...d.puede_pagar.map((x) => h("li", {}, x)))] : null,
+      d.le_falta.length ? [h("b", { style: "display:block;margin-top:8px" }, "Le falta"),
+        h("ul", {}, ...d.le_falta.map((x) => h("li", {}, x)))] : null) : null,
+    consulta ? bloque("Cómo le entra una consulta", h("p", { style: "margin:0" }, consulta),
+      a.biblioteca_meta ? h("p", { style: "margin:6px 0 0" },
+        enlace(a.biblioteca_meta, "¿Anuncios activos? Compruébalo en la Biblioteca de anuncios de Meta ↗")) : null) : null,
+    (a.correos || []).length ? bloque(`Correos que publica (${a.correos.length})`, h("ul", {},
+      ...a.correos.map((c) => h("li", {}, c.correo, " ", h("span", { class: "chip " + c.estado }, c.estado), " ",
+        h("small", { style: "color:var(--muted)" }, c.clase))))) : null,
+    (a.cargos || []).length ? bloque("Posible decisor", h("details", {},
+      h("summary", {}, "Fragmentos de su web: léelos, un regex no distingue"),
+      h("ul", {}, ...a.cargos.map((c) => h("li", {}, "…" + c + "…"))))) : null,
+    paginas.length ? bloque("Páginas visitadas", h("ul", {}, ...paginas.map(([k, u]) => h("li", {}, enlace(u, k))))) : null,
+    d.ficha ? h("details", { style: "margin-top:16px" }, h("summary", {}, "Ficha técnica completa"), h("pre", {}, d.ficha)) : null,
+  );
+  caja.scrollTop = 0;
+}
+
+function accionFicha(d) {
+  const caja = (...hijos) => h("div", { class: "accion" }, ...hijos);
+  if (d.borrador) return caja(h("button", { class: "btn prim", onclick: () => irABorrador(d.clave) }, "Ver su borrador en Correos →"),
+    d.observacion && d.borrador !== "descartada" ? h("small", {}, "Observación elegida: " + d.observacion) : null);
+  if (d.investigando) return caja(h("button", { class: "btn girando", disabled: true }, "Investigando"),
+    h("small", {}, "Unos 10 minutos. Cuando termine aparece en Correos para que lo revises."));
+  if (d.bloqueado) return caja(h("small", {}, "Está en la lista negra: no se le vuelve a escribir."));
+  if (!d.web || d.clave.startsWith("n:")) return caja(h("small", {}, "Sin web: por correo no hay nada que investigar."));
+  if (!INVESTIGABLES.includes(d.estado)) return null;
+  const aviso_ = d.estado === "floja" ? "Ojo: las señales no cuadran del todo. "
+    : d.estado === "sin correo" ? "No publica un correo usable: puede que la investigación tampoco lo encuentre. " : "";
+  return caja(
+    h("button", { class: "btn prim", disabled: !radar.trabajos?.claude, onclick: (e) => investigar(d.clave, e.currentTarget) },
+      "Investigar y redactar con Claude"),
+    h("small", {}, aviso_ + "Tarda unos 10 minutos y gasta bastantes tokens. El borrador queda en Correos para que lo revises: no se envía nada."));
+}
+
+async function investigar(clave, boton) {
+  boton.disabled = true; boton.classList.add("girando");
+  try {
+    radar.trabajos = await api(`/api/radar/${encodeURIComponent(clave)}/investigar`, {});
+    aviso("Investigando. Cuando termine, el borrador aparece en Correos.");
+    await cargarRadar();
+    vigilar();
+  } catch (e) { aviso(e.message, true); boton.disabled = false; boton.classList.remove("girando"); }
+}
+
+async function rastrear(boton) {
+  const comuna = $("comuna").value.trim();
+  if (!comuna) return aviso("Escribe una comuna o ciudad", true);
+  if (radar.filas.some((f) => norm(f.comuna) === norm(comuna))
+      && !confirm(`${comuna} ya está rastreada. ¿Buscar otra vez? Solo se suman las que no estaban.`)) return;
+  try {
+    radar.trabajos = await api("/api/radar/rastrear", { comuna });
+    $("comuna").value = "";
+    pintarTrabajos();
+    aviso(`Rastreando ${comuna}. Puedes seguir usando el panel mientras tanto.`);
+    vigilar();
+  } catch (e) { aviso(e.message, true); }
+}
+
+async function irABorrador(dominio) {
+  mostrar("correos");
+  await cargarLista();
+  const b = lista.find((x) => x.dominio === dominio);
+  if (b) { const i = GRUPOS.findIndex(([, est]) => est.includes(b.estado)); if (i >= 0) filtro = i; }
+  await abrir(dominio);
+}
+
+// Mientras algo corre, pregunta cada 4 s; si no, cada 20 s.
+async function vigilar() {
+  clearTimeout(vigilar.t);
+  let t = radar.trabajos || {};
+  try {
+    t = await api("/api/radar/trabajos");
+    const antes = radar.trabajos || {}, habiaBase = !!huella;
+    radar.trabajos = t;
+    if (huellaDe(t) !== huella) {
+      // Sin una lectura anterior (recién abierto) no se avisa de lo que ya había terminado.
+      if (habiaBase) {
+        const nuevas = (t.terminadas || []).slice((antes.terminadas || []).length);
+        for (const x of nuevas) aviso(x.estado === "error" ? `No salió ${x.nombre}: ${x.mensaje}` : `✓ ${x.nombre}: ${x.estado}`, x.estado === "error");
+        if (antes.busqueda?.fase !== t.busqueda?.fase && t.busqueda?.fase === "listo") aviso("✓ " + t.busqueda.mensaje);
+      }
+      await cargarRadar();
+      await Promise.all([cargarLista(), cargarEstado()]).catch(() => {});
+    } else pintarTrabajos();
+  } catch {}
+  vigilar.t = setTimeout(vigilar, ocupado(t) ? 4000 : 20000);
+}
+
+// --- arranque ----------------------------------------------------------------
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); guardar(); }
+  if (e.key === "Escape" && vista === "radar" && fichaR) cerrarFicha();
+});
+window.addEventListener("hashchange", () => {
+  const v = location.hash.slice(1);
+  if (["correos", "radar"].includes(v) && v !== vista) mostrar(v);
+});
+(async () => {
+  let inicial = location.hash.slice(1);
+  if (!["correos", "radar"].includes(inicial)) {
+    try { inicial = localStorage.getItem("prospector-vista") || "correos"; } catch { inicial = "correos"; }
+  }
+  mostrar(inicial === "radar" ? "radar" : "correos");
+  try {
+    await cargarEstado(); await cargarLista();
+    const primero = lista.find((b) => b.estado === "por revisar");
+    if (primero) await abrir(primero.dominio);
+  } catch (e) { aviso("No pude hablar con el panel: " + e.message, true); }
+  setInterval(() => { cargarEstado().catch(() => {}); cargarLista().catch(() => {}); }, 20000);
+  vigilar();
+})();
+</script>
+</body>
+</html>
