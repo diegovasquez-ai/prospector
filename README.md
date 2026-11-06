@@ -1,9 +1,9 @@
 # Prospector
 
 Correo frío B2B escrito uno a uno, para el rubro que elijas. Busca negocios en
-Google Maps, investiga cada uno con Claude, redacta tres correos que no parecen
-plantilla y te los deja en un panel. Tú los lees, los corriges y los apruebas.
-Después salen desde tu Gmail, a ritmo de persona.
+Google Maps, **descarta los que no valen la pena**, investiga cada uno con Claude,
+redacta tres correos que no parecen plantilla y te los deja en un panel. Tú los lees,
+los corriges y los apruebas. Después salen desde tu Gmail, a ritmo de persona.
 
 **Nada sale sin tu clic.**
 
@@ -76,6 +76,40 @@ Cuando alguien responde, su secuencia se detiene sola y te aparece en
 **Respondieron**. Para contestar, apóyate en [plantillas/respuestas.md](plantillas/respuestas.md)
 o pídele ayuda a Claude.
 
+## Cómo decide quién vale la pena
+
+Cualquier scraper te trae todo lo que hay en Maps, sirva o no. Este decide antes de que
+gastes tiempo en un negocio:
+
+1. **Busca** en Google Maps y guarda su nota y cuántas reseñas tiene.
+2. **Mide** hasta 5 páginas de su web, sin opinar.
+3. **Exige evidencia.** Una señal débil no alcanza:
+
+   | Pregunta | Señal | Puntos |
+   |---|---|---|
+   | ¿Le llegan clientes? | Muchas reseñas en Google | 2 a 4 |
+   | | Lo que publica en su web, sucursales | 1 |
+   | ¿Puede pagar? | Ya paga software, o tiene 5 o más personas con correo | 2 |
+   | | Píxel de Meta, etiqueta de Google Ads, portales | 1 |
+   | ¿Hay trabajo manual? | Varios WhatsApp, solo formulario, lo que cita Claude | 1 |
+   | ¿Está creciendo? | Busca gente | 1 |
+
+   Para seguir necesita 2 puntos o más entre clientes y pago. "No tiene chat" no suma:
+   lo cumplen casi todos, así que no distingue a nadie.
+4. **Claude lee su web** con un modelo chico, en segundos. Aparta a redes, otros rubros y
+   a quien trabaja solo, y solo afirma que no sirve con una **cita de la web que el programa
+   comprueba**. Lo que aparta queda en `lista --todas` y en el Radar con el motivo: si se
+   equivocó, lo mandas a investigar desde el Radar. Si Claude falla, el negocio sigue adelante.
+   No siempre responde igual, así que míralo como una primera lectura.
+5. **La investigación completa** es solo para las que pasan, porque es lo que cuesta caro.
+
+**Las señales no prueban que te vayan a responder.** Después de unos 100 envíos,
+`python prospector.py metricas` te muestra qué señales terminan en respuesta. Si alguna no
+sirve en tu rubro, ajústala en vez de creerle al puntaje.
+
+Si un negocio con muchas reseñas no publica correo, queda como "sin correo" en el Radar:
+puedes mandarlo a investigar a mano.
+
 ## WhatsApp, a mano
 
 Si un negocio publica un botón de WhatsApp, el panel guarda el número. Después del
@@ -107,13 +141,17 @@ Todo lo propio de tu rubro vive en `nicho.json`:
 | `portales` | Directorios del rubro: aparecer ahí indica que pueden pagar |
 | `sistemas` | Software del rubro que se puede detectar en su web |
 | `catalogo` | Qué publican (propiedades, tratamientos...) y desde cuánto cuenta como señal |
+| `resenas` | Cuántas reseñas son "bueno" y "muy_bueno" en tu rubro: un restaurante junta muchas más que una notaría |
+| `equipo_minimo` | Desde cuántas personas te sirve un negocio. Pon 1 si también le vendes a quien trabaja solo |
 | `pais` | Dónde se busca (CL, MX, AR, CO, ES...) |
 
 **Lo que propone Claude es un punto de partida.** Después de tu primera búsqueda,
 mira `python prospector.py lista --todas`. Si pasan negocios que no sirven, o se
 descartan algunos buenos, corrige el archivo o pídeselo a Claude, y vuelve a medir
-con `python prospector.py analizar --todas`. El detalle de quién eres y qué problema
-buscas está en `negocio.md`: si escribes mejor ese problema, los correos mejoran.
+con `python prospector.py analizar --todas`. Si tu base es anterior a las reseñas, repite
+antes `buscar` en la misma zona: las actualiza sin duplicar nada. El detalle de quién eres y
+qué problema buscas está en `negocio.md`: si escribes mejor ese problema, los correos mejoran
+y el filtro de Claude acierta más.
 
 Quizás necesites otro ángulo: el correo está hecho para decir "vi esto en tu negocio
 y sé resolverlo", y se apoya en cómo les llegan los clientes. Si tu oferta es otra
@@ -173,7 +211,9 @@ reales: no los subas a ningún repo público ni se los pases a nadie.
 | Señal | Cómo | Ojo |
 |---|---|---|
 | WhatsApp, chat, formulario | Enlaces `wa.me`, widgets conocidos, `<form>` | Un chat cargado tarde por JavaScript se escapa |
+| Reseñas | Cuántas tiene en Google Maps | Indican clientes de forma indirecta y varían mucho por rubro |
 | Anuncios | Píxel de Meta, etiqueta de Google Ads | Instalado no significa activo: el correo no lo afirma sin comprobarlo |
+| Si busca gente | "Trabaja con nosotros" y parecidos | Puede ser solo un enlace antiguo en el menú |
 | Sistema | HubSpot, Salesforce y el software de tu nicho | Si ya usan uno, cambia el ángulo |
 | Tamaño | Lo que publican, su texto, correos del equipo | Lo que dicen de sí mismos se cita como suyo |
 | Correos | Todos los publicados, clasificados | Nunca se deduce un correo por patrón |

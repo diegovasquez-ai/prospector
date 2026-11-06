@@ -37,6 +37,9 @@ def buscar(comunas: list[str], limite: int, fuente: str) -> int:
                 k = bd.clave(l)
                 if k in base:
                     repetidas += 1
+                    # Las reseñas suben con el tiempo, y una base antigua no las tenía.
+                    if l.get("resenas"):
+                        base[k].update(resenas=l["resenas"], rating=l.get("rating") or base[k].get("rating", ""))
                     continue
                 base[k] = {**l, "comuna": comuna, "consulta": consulta,
                            "estado": "nueva", "descubierta": date.today().isoformat()}
@@ -49,6 +52,8 @@ def buscar(comunas: list[str], limite: int, fuente: str) -> int:
 
 
 def cmd_analizar(todas: bool, concurrencia: int) -> int:
+    from . import config
+    config.cargar()
     base = bd.cargar()
     if not base:
         pantalla.aviso("La base está vacía. Empieza por:  python prospector.py buscar \"Las Condes\"")
@@ -74,11 +79,11 @@ def lista(todas: bool) -> int:
     RANKING.parent.mkdir(exist_ok=True)
     with RANKING.open("w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
-        w.writerow(["estado", "puntaje", "nombre", "comuna", "web", "correo",
-                    "correo_estado", "puede_pagar", "le_falta", "motivo", "ficha"])
+        w.writerow(["estado", "puntaje", "nombre", "comuna", "web", "correo", "correo_estado",
+                    "resenas", "clientes_y_pago", "trabajo_manual", "motivo", "ficha"])
         for l in filas:
             w.writerow([l["estado"], l["puntaje"], l["nombre"], l.get("comuna", ""),
-                        l.get("web", ""), l.get("correo", ""), l.get("correo_estado", ""),
+                        l.get("web", ""), l.get("correo", ""), l.get("correo_estado", ""), l.get("resenas", ""),
                         " · ".join(l["puede_pagar"]), " · ".join(l["le_falta"]),
                         l.get("motivo", ""), f"fichas/{dominio(l.get('web', ''))}.md"])
 
@@ -87,8 +92,8 @@ def lista(todas: bool) -> int:
         marca = pantalla.c("●", "verde") if l["estado"] == "candidata" else "○"
         print(f"  {marca} {l['puntaje']:>3}  {l['nombre'][:30]:<30} {l.get('comuna', '')[:12]:<12} "
               f"{(l.get('correo') or '—')[:32]:<32} {l.get('correo_estado', '')}")
-        print(pantalla.c(f"          puede pagar: {' · '.join(l['puede_pagar']) or '—'}", "gris"))
-        print(pantalla.c(f"          le falta:    {' · '.join(l['le_falta']) or '—'}", "gris"))
+        print(pantalla.c(f"          clientes y pago:  {' · '.join(l['puede_pagar']) or '—'}", "gris"))
+        print(pantalla.c(f"          trabajo manual:   {' · '.join(l['le_falta']) or '—'}", "gris"))
         if l.get("motivo"):
             print(pantalla.c(f"          ojo:         {l['motivo']}", "amarillo"))
 
@@ -149,8 +154,27 @@ def metricas() -> int:
         contesto = lambda grupo: sum(1 for b in grupo if b.get("estado") in ("respondió", "interesado", "retomar", "baja"))  # noqa: E731
         if con:
             print(f"    Con WhatsApp: {contesto(con)} de {len(con)} respondieron · solo correo: {contesto(sin)} de {len(sin)}")
+    _metricas_por_senal(con_envio)
     print(pantalla.c("\n  Cambia una sola cosa por semana (asunto, observación o CTA) para saber qué movió el número.", "gris"))
     return 0
+
+
+def _metricas_por_senal(con_envio: list[dict]) -> None:
+    """¿Qué tipo de señal termina en respuesta? Para corregir la calificación con datos."""
+    base = bd.cargar()
+    filas = [(b, (base.get(b.get("dominio")) or {}).get("calificacion") or {}) for b in con_envio]
+    filas = [(b, c) for b, c in filas if c]
+    if not filas:
+        return
+    contesto = lambda b: b.get("estado") in ("respondió", "interesado", "retomar", "baja")  # noqa: E731
+    print("\n  Qué señales terminan en respuesta (con señal · sin ella)")
+    for clave, titulo in (("volumen", "le llegan clientes"), ("capacidad", "puede pagar"),
+                          ("manual", "trabajo manual a la vista"), ("momento", "busca gente")):
+        con = [b for b, c in filas if c.get(clave)]
+        sin = [b for b, c in filas if not c.get(clave)]
+        print(f"    {titulo:<28} {sum(map(contesto, con))} de {len(con)} · {sum(map(contesto, sin))} de {len(sin)}")
+    if len(filas) < 100:
+        print(pantalla.c(f"    Son {len(filas)} envíos: todavía no alcanza para concluir nada. Mira esto desde los 100.", "gris"))
 
 
 def conectar_gmail() -> int:

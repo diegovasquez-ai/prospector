@@ -50,7 +50,7 @@ def _fila(l: dict, b: dict | None, fuera: dict) -> dict:
         "correo": b.get("para") or l.get("correo", ""),
         "correo_estado": b.get("correo_estado", "") if b.get("para") else l.get("correo_estado", ""),
         "telefono": l.get("telefono", ""), "web": l.get("web", ""),
-        "rating": l.get("rating", ""), "categoria": l.get("categoria", ""),
+        "rating": l.get("rating", ""), "resenas": l.get("resenas", ""), "categoria": l.get("categoria", ""),
         "direccion": l.get("direccion", ""), "lat": l.get("lat", ""), "lng": l.get("lng", ""),
         "whatsapp": bool(a.get("whatsapp") or l.get("whatsapp")),
         "puede_pagar": l.get("puede_pagar") or [], "le_falta": l.get("le_falta") or [],

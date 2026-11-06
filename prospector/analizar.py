@@ -2,14 +2,15 @@
 Fases 3, 4 y 5: analizar cada negocio, filtrar con señales y encontrar a quién
 escribirle.
 
-Entramos en hasta cuatro páginas de su web (portada, contacto, equipo y catálogo)
-y sacamos lo que se puede medir sin opinar:
+Entramos en hasta cinco páginas de su web (portada, contacto, equipo, quiénes somos
+y catálogo) y sacamos lo que se puede medir sin opinar:
 
     cómo entra una consulta    WhatsApp, chat, formulario, teléfono
     si invierten en anuncios   píxel de Meta, etiqueta de Google Ads
     qué sistema usan           HubSpot, Pipedrive... si la web lo delata
     tamaño                     lo que publican, portales, correos del equipo
     si la web está viva        el año del copyright
+    si está creciendo          si busca gente
     correos                    todos los que publican, clasificados
 
 Qué negocio sirve y cuál no depende del rubro: sale de nicho.json. Lo que exige
@@ -27,7 +28,7 @@ from urllib.parse import quote_plus, unquote, urljoin, urlparse
 import httpx
 from bs4 import BeautifulSoup
 
-from . import nicho
+from . import filtro, nicho
 from .base import bloqueado
 from .puente import CABECERAS, EMAIL_BASURA, RAIZ, Robots, dominio, exclusiones, sin_acentos
 
@@ -38,10 +39,15 @@ FICHAS = RAIZ / "fichas"
 # Nunca por el dominio: "casaandespropiedades.cl" contiene "propiedades" y todos
 # sus enlaces darían positivo. Lo propio del rubro sale de nicho.json.
 CONTACTO = re.compile(r"contact|cont[aá]ct|escr[ií]benos", re.I)
+# Dice quiénes son: ahí se ve si es una empresa, una persona sola o una red.
+EMPRESA = re.compile(r"nosotros|qui[eé]nes[\s-]*somos|about|la[\s-]*empresa|historia|sobre[\s-]*(?:mi|m[ií])\b", re.I)
+# "Trabaja con nosotros" también dice "nosotros", pero no es quiénes son.
+EMPLEO = re.compile(r"trabaj|emple|postul|career|vacante", re.I)
 
 
 def paginas_a_buscar() -> dict:
-    return {"contacto": CONTACTO, "equipo": nicho.rx_equipo(), "catalogo": nicho.rx_catalogo()}
+    return {"contacto": CONTACTO, "equipo": nicho.rx_equipo(), "empresa": EMPRESA,
+            "catalogo": nicho.rx_catalogo()}
 
 
 NO_ES_PAGINA = (".pdf", ".jpg", ".jpeg", ".png", ".webp", ".zip", ".doc", ".docx")
@@ -78,7 +84,25 @@ SISTEMAS = {
     "Clientify": ("clientify",),
 }
 
+# Un bot o agente ya instalado: ya compraron algo parecido a lo que ofreces.
+BOTS = {
+    "ManyChat": ("manychat.com",),
+    "Landbot": ("landbot.io",),
+    "Botmaker": ("botmaker.com",),
+    "Chatbase": ("chatbase.co",),
+    "Treble": ("treble.ai",),
+    "Wati": ("wati.io",),
+    "Yalo": ("yalo.com",),
+    "Voiceflow": ("voiceflow.com",),
+    "Botpress": ("botpress.cloud",),
+}
+
 GOOGLE_ADS = re.compile(r"\baw-\d{6,}|googleadservices\.com")
+# Busca gente: está creciendo, o le falta tiempo. Sale en el texto o en el menú.
+CONTRATANDO = re.compile(
+    r"trabaja con nosotros|[uú]nete a (?:nuestro|el) equipo|estamos contratando|bolsa de trabajo|"
+    r"ofertas? de empleo|vacantes|buscamos (?:personas|talento|ejecutiv|vendedor|asesor|recepcionista|asistente)",
+    re.I)
 COPYRIGHT = re.compile(r"(?:©|&copy;|copyright)\s*(?:20\d\d\s*[-–]\s*)?(20\d\d)")
 SUCURSALES = re.compile(r"\bsucursal(?:es)?\b|\boficinas en\b", re.I)
 CARGOS = re.compile(
@@ -185,6 +209,8 @@ def _elegir_enlaces(html: str, base: str) -> dict[str, str]:
             continue
         texto = a.get_text(" ", strip=True)
         for tipo, rx in buscadas.items():
+            if tipo in ("equipo", "empresa") and (EMPLEO.search(texto) or EMPLEO.search(ruta)):
+                continue
             if rx.search(texto) or rx.search(ruta):
                 candidatos[tipo].append(url)
 
@@ -296,7 +322,7 @@ def medir(lead: dict, paginas: dict[str, tuple[str, str]]) -> tuple[dict, dict[s
 
     # Las frases con un cargo, empezando por la página de equipo.
     cargos = []
-    for tipo in ("equipo", "portada", "contacto", "catalogo"):
+    for tipo in ("equipo", "empresa", "portada", "contacto", "catalogo"):
         texto = textos.get(tipo, "")
         for m in CARGOS.finditer(texto):
             trozo = texto[max(0, m.start() - 70):m.end() + 50].strip()
@@ -306,12 +332,15 @@ def medir(lead: dict, paginas: dict[str, tuple[str, str]]) -> tuple[dict, dict[s
                 break
 
     anos = [int(a) for a in COPYRIGHT.findall(html_todo)]
+    contrata = CONTRATANDO.search(" ".join(textos.values()))
     senales = {
         "fecha": date.today().isoformat(),
         "paginas": {t: u for t, (u, _) in paginas.items()},
         "whatsapp": any(w in html_todo for w in WHATSAPP),
         "whatsapp_numeros": _numeros_wa(html_todo),
         "chat": [n for n, huellas in CHATS.items() if any(h in html_todo for h in huellas)],
+        "bots": [n for n, huellas in BOTS.items() if any(h in html_todo for h in huellas)],
+        "contratando": contrata.group(0) if contrata else "",
         "formulario": formulario,
         "telefono": telefono,
         "meta_pixel": "connect.facebook.net" in html_todo and (
@@ -329,7 +358,7 @@ def medir(lead: dict, paginas: dict[str, tuple[str, str]]) -> tuple[dict, dict[s
         "correos": clasificados,
         "cargos": cargos,
         "biblioteca_meta": ("https://www.facebook.com/ads/library/?active_status=active"
-                            "&ad_type=all&country=CL&search_type=keyword_unordered&q="
+                            f"&ad_type=all&country={nicho.pais().codigo}&search_type=keyword_unordered&q="
                             + quote_plus(lead.get("nombre", ""))),
     }
     return senales, textos
@@ -380,44 +409,90 @@ def tipo_de(lead: dict, textos: dict[str, str], fallo: str = "") -> tuple[str, s
     return "dudosa", f"su web no parece de {n['rubro']}: confírmalo antes de escribir"
 
 
-def puntuar(s: dict) -> tuple[list[str], list[str], list[str]]:
-    """
-    Fase 4: puede pagar + le falta algo + no está abandonada.
-    Devuelve (puede_pagar, le_falta, contras), en frases que ya sirven para
-    leerlas en la ficha sin traducir nada.
-    """
-    personas = sum(1 for c in s["correos"] if c["clase"] == "persona")
-    puede = []
-    if s["meta_pixel"]:
-        puede.append("píxel de Meta en su web")
-    if s["google_ads"]:
-        puede.append("etiqueta de Google Ads")
-    cat = nicho.actual()["catalogo"]
-    etiqueta, minimo = cat.get("etiqueta") or "elementos", cat.get("minimo") or 30
-    if s["catalogo_fichas"] >= minimo:
-        puede.append(f"{s['catalogo_fichas']} fichas de {etiqueta} enlazadas en su web")
-    elif s["catalogo_texto"] >= minimo:
-        puede.append(f"su web dice «{s['catalogo_texto']} {etiqueta}»")
-    if s["portales"]:
-        puede.append("enlaza a " + ", ".join(s["portales"]))
-    if personas >= 5:
-        puede.append(f"{personas} correos de personas del equipo")
-    if s["sucursales"]:
-        puede.append("menciona sucursales u oficinas")
+def _entero(valor) -> int:
+    try:
+        return int(float(valor))
+    except (TypeError, ValueError):
+        return 0
 
-    falta = []
-    if not s["whatsapp"]:
-        falta.append("sin WhatsApp en la web")
-    if not s["chat"]:
-        falta.append("sin chat ni respuesta automática visible")
+
+def calificar(lead: dict, s: dict) -> dict:
+    """
+    Fase 4. Lo que hay que saber antes de ofrecerle IA o automatización:
+
+        volumen     ¿le llegan clientes? Sin volumen no hay nada que automatizar.
+        capacidad   ¿puede pagar? Ya paga software o anuncios, o tiene equipo.
+        manual      ¿hay trabajo repetitivo a la vista? Lo cita el filtro de Claude.
+        momento     ¿está creciendo? Busca gente.
+
+    Cada señal lleva sus puntos y una frase que ya se lee en la ficha. "Sin chat" no
+    suma: lo cumplen casi todos, así que no distingue a nadie.
+    """
+    nc = nicho.actual()
+    cat, umbral = nc["catalogo"], nc.get("resenas") or {}
+    etiqueta, minimo = cat.get("etiqueta") or "elementos", cat.get("minimo") or 30
+    bloques: dict[str, list[tuple[str, int]]] = {"volumen": [], "capacidad": [], "manual": [], "momento": []}
+
+    resenas = _entero(lead.get("resenas"))
+    if resenas >= umbral.get("muy_bueno", 100):
+        bloques["volumen"].append((f"{resenas} reseñas en Google", 4))
+    elif resenas >= umbral.get("bueno", 20):
+        bloques["volumen"].append((f"{resenas} reseñas en Google", 2))
+    if s["catalogo_fichas"] >= minimo:
+        bloques["volumen"].append((f"{s['catalogo_fichas']} fichas de {etiqueta} enlazadas en su web", 1))
+    elif s["catalogo_texto"] >= minimo:
+        bloques["volumen"].append((f"su web dice «{s['catalogo_texto']} {etiqueta}»", 1))
+    if s["sucursales"]:
+        bloques["volumen"].append(("menciona sucursales u oficinas", 1))
+
+    if s["sistemas"]:
+        bloques["capacidad"].append(("ya paga software: " + ", ".join(s["sistemas"]), 2))
+    personas = sum(1 for c in s["correos"] if c["clase"] == "persona")
+    if personas >= 5:
+        bloques["capacidad"].append((f"{personas} correos de personas del equipo", 2))
+    if s["meta_pixel"]:
+        bloques["capacidad"].append(("píxel de Meta en su web", 1))
+    if s["google_ads"]:
+        bloques["capacidad"].append(("etiqueta de Google Ads", 1))
+    if s["portales"]:
+        bloques["capacidad"].append(("enlaza a " + ", ".join(s["portales"]), 1))
+
+    numeros = len(s.get("whatsapp_numeros") or [])
+    if numeros >= 2:
+        bloques["manual"].append((f"atiende por {numeros} WhatsApp distintos", 1))
     if s["formulario"] and not s["whatsapp"] and not s["chat"]:
-        falta.append("solo formulario")
+        bloques["manual"].append(("las consultas entran solo por formulario", 1))
+    # Sirven para escribirle y ordenan poco: un punto, aunque Claude cite dos.
+    for i, tarea in enumerate(((lead.get("filtro") or {}).get("trabajo_manual") or [])[:2]):
+        bloques["manual"].append((f"{tarea['tarea']} («{tarea['cita']}»)", 0 if i else 1))
+
+    if s.get("contratando"):
+        bloques["momento"].append((f"busca gente: «{s['contratando']}»", 1))
 
     contras = []
-    # Medio internet lleva el año del pie sin actualizar: solo cuenta si es muy viejo.
-    if s["copyright"] and s["copyright"] <= date.today().year - 4:
+    # Medio internet lleva el año del pie sin actualizar: solo cuenta si es muy viejo,
+    # y con muchas reseñas el negocio sigue vivo aunque su web no.
+    if (s["copyright"] and s["copyright"] <= date.today().year - 4
+            and resenas < umbral.get("bueno", 20)):
         contras.append(f"copyright de {s['copyright']}: puede estar abandonada")
-    return puede, falta, contras
+    if s.get("bots"):
+        contras.append("ya usa un bot: " + ", ".join(s["bots"]))
+    puntos = {b: sum(n for _, n in lista) for b, lista in bloques.items()}
+    return {
+        "bloques": {b: [f for f, _ in lista] for b, lista in bloques.items()},
+        "puntos": puntos, "contras": contras,
+        # Volumen o capacidad, con más de una señal débil: lo que separa a un negocio
+        # con algo que automatizar y con qué pagarlo de uno con una web bonita.
+        "suficiente": puntos["volumen"] + puntos["capacidad"] >= 2,
+    }
+
+
+def _aplicar_calificacion(lead: dict, cal: dict) -> None:
+    b = cal["bloques"]
+    verificado = 1 if lead["correo_estado"] == "verificado" else 0
+    lead.update(puntaje=sum(cal["puntos"].values()) + verificado - 2 * len(cal["contras"]),
+                calificacion=cal["puntos"],
+                puede_pagar=b["volumen"] + b["capacidad"], le_falta=b["manual"] + b["momento"])
 
 
 def analizar_uno(lead: dict, robots: Robots) -> dict:
@@ -426,7 +501,7 @@ def analizar_uno(lead: dict, robots: Robots) -> dict:
     senales, textos = medir(lead, paginas) if paginas else (None, {})
     tipo, motivo = tipo_de(lead, textos, fallo)
     lead.update(tipo=tipo, motivo=motivo, analisis=senales,
-                puede_pagar=[], le_falta=[], puntaje=0, correo="", correo_estado="")
+                puede_pagar=[], le_falta=[], puntaje=0, calificacion={}, correo="", correo_estado="")
 
     if tipo == "web cerrada":
         # Bloqueo, certificado roto, error del servidor: el negocio existe,
@@ -437,31 +512,49 @@ def analizar_uno(lead: dict, robots: Robots) -> dict:
         lead["estado"] = "descartada"
         return lead
 
-    puede, falta, contras = puntuar(senales)
     usables = sorted((c for c in senales["correos"] if c["clase"] in ORDEN_CORREO),
                      key=lambda c: ORDEN_CORREO[c["clase"]])
     if usables:
         lead["correo"], lead["correo_estado"] = usables[0]["correo"], usables[0]["estado"]
-    # Puede pagar pesa el doble: casi todos los negocios pequeños tienen
-    # algo que les falta, pocas tienen con qué pagarlo.
-    lead["puntaje"] = (2 * len(puede) + min(len(falta), 2)
-                       + (1 if lead["correo_estado"] == "verificado" else 0) - 2 * len(contras))
-    lead.update(puede_pagar=puede, le_falta=falta)
+    cal = calificar(lead, senales)
+    _aplicar_calificacion(lead, cal)
 
     if tipo == "dudosa":
         lead["estado"] = "floja"
-    elif contras:
-        lead["estado"], lead["motivo"] = "floja", contras[0]
-    elif not puede or not falta:
+    elif cal["contras"]:
+        lead["estado"], lead["motivo"] = "floja", cal["contras"][0]
+    elif not cal["suficiente"]:
         lead["estado"] = "floja"
-        lead["motivo"] = ("ninguna señal de que pueda pagar" if not puede
-                          else "ya tiene WhatsApp y chat en la web")
+        lead["motivo"] = "pocas señales de que le lleguen clientes o pueda pagar"
     elif not usables:
         lead["estado"], lead["motivo"] = "sin correo", "no publica ningún correo usable"
     else:
         lead["estado"] = "candidata"
+        _filtrar(lead, senales, textos)
     escribir_ficha(lead, textos)
     return lead
+
+
+def _filtrar(lead: dict, senales: dict, textos: dict[str, str]) -> None:
+    """
+    El filtro de Claude, solo para las que ya pasaron lo medible. Si falla, siguen.
+    Aparta, no descarta: una floja no se investiga sola, pero desde el Radar se puede
+    mandar a investigar igual si el filtro se equivocó.
+    """
+    resultado = filtro.revisar(lead, textos)
+    if not resultado:
+        return
+    lead["filtro"] = resultado
+    _aplicar_calificacion(lead, calificar(lead, senales))
+    veredicto, cita = resultado["veredicto"], resultado.get("cita")
+    minimo, personas = nicho.actual().get("equipo_minimo", 3), resultado.get("personas")
+    if veredicto == "no_sirve" or (veredicto == "dudoso" and resultado["tipo"] in filtro.DESCARTABLES):
+        lead.update(estado="floja", motivo=f"Claude: {resultado['motivo']}" + (f" («{cita}»)" if cita else ""))
+    elif personas is not None and personas < minimo:
+        # Puede haber más gente de la que muestra su web: esto lo mira una persona.
+        lead.update(estado="floja", motivo=f"Claude ve solo {personas} persona(s) en su web: {resultado['motivo']}")
+    elif veredicto == "dudoso":
+        lead["motivo"] = f"Claude duda: {resultado['motivo']}"
 
 
 def analizar(base: dict[str, dict], todas: bool = False, concurrencia: int = 8,
@@ -502,6 +595,18 @@ def _si(v) -> str:
     return "sí" if v else "no"
 
 
+def _ficha_filtro(lead: dict) -> list[str]:
+    f = lead.get("filtro")
+    if not f:
+        return []
+    personas = f"{f['personas']} personas a la vista · " if f.get("personas") else ""
+    L = ["## Filtro de Claude (revísalo: es una primera lectura)",
+         f"{f['veredicto']} · {f['tipo']} · {personas}{f['motivo']}"]
+    if f.get("cita"):
+        L.append(f"> {f['cita']}")
+    return [*L, ""]
+
+
 def escribir_ficha(lead: dict, textos: dict[str, str]) -> None:
     """
     Lo que lee el agente antes de redactar. Separa lo medido (arriba) del
@@ -517,19 +622,21 @@ def escribir_ficha(lead: dict, textos: dict[str, str]) -> None:
         f"# {lead['nombre']}",
         "",
         f"{lead['web']} · {lead.get('comuna', '')} · Maps {lead.get('rating') or '?'}★"
-        f" · {lead.get('categoria') or 'sin categoría'}",
+        f" ({lead.get('resenas') or '?'} reseñas) · {lead.get('categoria') or 'sin categoría'}",
         f"Estado: **{lead['estado']}** · puntaje {lead['puntaje']} · tipo {lead['tipo']}"
         + (f" · {lead['motivo']}" if lead.get("motivo") else ""),
         f"Analizada el {s['fecha']}",
         "",
-        "## Puede pagar",
+        "## Le llegan clientes y puede pagar",
         *([f"- {x}" for x in lead["puede_pagar"]] or ["- (nada medible)"]),
         "",
-        "## Le falta",
+        "## Trabajo manual y momento",
         *([f"- {x}" for x in lead["le_falta"]] or ["- (nada visible)"]),
         "",
+        *_ficha_filtro(lead),
         "## Cómo entra una consulta",
         f"WhatsApp {_si(s['whatsapp'])} · chat {', '.join(s['chat']) or 'no'}"
+        f" · bot {', '.join(s.get('bots') or []) or 'no'}"
         f" · formulario {_si(s['formulario'])} · teléfono {_si(s['telefono'])}",
         f"WhatsApp publicado: {', '.join(s['whatsapp_numeros']) or 'ninguno en un botón'}",
         "",
@@ -559,7 +666,7 @@ def escribir_ficha(lead: dict, textos: dict[str, str]) -> None:
         "",
         "## Texto de su web",
     ]
-    for tipo, limite in (("portada", 900), ("equipo", 1500), ("contacto", 600), ("catalogo", 500)):
+    for tipo, limite in (("portada", 1500), ("empresa", 1500), ("equipo", 1500), ("contacto", 600), ("catalogo", 500)):
         if textos.get(tipo):
             L += ["", f"### {tipo}", textos[tipo][:limite]]
     (FICHAS / f"{nombre_archivo}.md").write_text("\n".join(L) + "\n", encoding="utf-8")

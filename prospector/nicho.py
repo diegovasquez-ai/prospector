@@ -33,7 +33,7 @@ def _vacio() -> dict:
     return {"rubro": "negocios", "singular": "negocio", "pais": "CL", "busquedas": [],
             "confirman_en_nombre": [], "confirman_en_web": [], "descartar": [], "cadenas": [],
             "portales": {}, "directorios": [], "sistemas": {}, "catalogo": {}, "paginas_equipo": [],
-            "textos": {}}
+            "resenas": {}, "equipo_minimo": 3, "textos": {}}
 
 
 def _leido() -> tuple[int, dict]:
@@ -75,9 +75,11 @@ def validar(d) -> list[str]:
     for clave in ("confirman_en_nombre", "confirman_en_web", "cadenas", "directorios", "paginas_equipo"):
         if not isinstance(d.get(clave, []), list):
             malos.append(f"«{clave}» debe ser una lista")
-    for clave in ("portales", "sistemas", "catalogo", "textos"):
+    for clave in ("portales", "sistemas", "catalogo", "resenas", "textos"):
         if not isinstance(d.get(clave, {}), dict):
             malos.append(f"«{clave}» debe ser un objeto")
+    if not isinstance(d.get("equipo_minimo", 3), int):
+        malos.append("«equipo_minimo» debe ser un número")
     reglas = d.get("descartar", [])
     if not isinstance(reglas, list) or not all(isinstance(r, dict) and r.get("tipo") for r in reglas):
         malos.append("cada regla de «descartar» necesita un «tipo»")
@@ -162,6 +164,8 @@ Responde SOLO con un JSON así, sin nada antes ni después:
                "conteo": ["palabras que siguen a una cantidad"],
                "minimo": 30}},
   "paginas_equipo": ["cómo llama este rubro a su página de equipo"],
+  "resenas": {{"bueno": 20, "muy_bueno": 100}},
+  "equipo_minimo": 3,
   "textos": {{
     "problema": "el problema concreto que resuelve la oferta para este rubro, en una frase",
     "resultado": "qué logra para ellos, en infinitivo y sin nombrar la herramienta",
@@ -173,6 +177,10 @@ Responde SOLO con un JSON así, sin nada antes ni después:
 
 Sé conservador: una palabra demasiado común descarta negocios buenos. No inventes
 portales ni software: si no estás seguro, deja la lista vacía. "logro" va vacío siempre.
+"resenas": cuántas reseñas en Google indican, en este rubro y país, un negocio con clientes
+de sobra ("bueno") y uno con mucho volumen ("muy_bueno"). Un restaurante junta muchas más que
+una notaría: ajusta los números al rubro. "equipo_minimo": con cuántas personas un negocio ya
+le puede comprar esta oferta; pon 1 si también le sirve a alguien que trabaja solo.
 """
 
 

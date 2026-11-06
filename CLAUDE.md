@@ -49,6 +49,20 @@ buenos negocios. El campo `confirman_en_web` va sin acentos y en minúscula.
 `nichos/inmobiliarias.json` es un ejemplo completo. Después de cambiarlo,
 `python prospector.py analizar --todas` vuelve a medir la base.
 
+## Quién vale la pena
+
+`analizar` no aprueba por tener una web bonita. `analizar.calificar` suma evidencia de
+clientes (reseñas de Maps, catálogo, sedes), capacidad de pago (software, anuncios, equipo),
+trabajo manual y momento, y exige 2 puntos o más entre clientes y pago. Después
+`prospector/filtro.py` le pasa la web a un modelo chico (`FILTRO_MODELO`, por defecto haiku):
+aparta redes, otros rubros y a quien trabaja solo, y solo afirma que no sirve con una cita que
+el código comprueba. Lo que aparta queda como floja, con el motivo, y se puede mandar a
+investigar desde el Radar. Si Claude falla, el negocio sigue. No siempre responde igual: es
+una primera lectura. Los umbrales son `resenas` y `equipo_minimo` en `nicho.json`.
+
+El filtro es una primera lectura y no reemplaza la investigación: si esta lo contradice,
+manda la investigación. El trabajo manual que cita sirve para escribir, pero apenas ordena.
+
 ## Cuando el usuario pida "prepárame los correos de hoy"
 
 1. `python prospector.py lista`. Toma los candidatos por orden de puntaje que

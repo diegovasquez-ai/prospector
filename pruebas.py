@@ -12,6 +12,7 @@ import http.client
 import json
 import os
 import smtplib
+import subprocess
 import sys
 import tempfile
 import threading
@@ -110,7 +111,7 @@ _s, _ = analizar.medir({"nombre": "X", "web": "https://x.mx"}, {"portada": ("htt
 comprobar("cuenta su catálogo, sus portales y su sistema", (_s["catalogo_fichas"], _s["portales"], _s["sistemas"]), (2, ["Doctoralia"], ["Dentalink"]))
 _s["correos"] = []
 _s["catalogo_fichas"] = 6
-comprobar("las señales hablan de su rubro", analizar.puntuar(_s)[0][0], "6 fichas de tratamientos enlazadas en su web")
+comprobar("las señales hablan de su rubro", analizar.calificar({}, _s)["bloques"]["volumen"][0], "6 fichas de tratamientos enlazadas en su web")
 comprobar("el país de búsqueda sale del nicho", nicho.pais().codigo, "MX")
 _b = []
 _orig = cli.descubrir
@@ -122,6 +123,17 @@ cli.buscar(["Guadalajara"], 5, "maps")
 sys.stdout = _s_out
 cli.descubrir = _orig
 comprobar("buscar usa las búsquedas y el país del nicho", _b, [("clinica dental", "Guadalajara", "MX"), ("dentista", "Guadalajara", "MX")])
+_base_ant = base.cargar()
+base.guardar({"sol.cl": {"nombre": "Sol", "web": "https://sol.cl", "estado": "candidata", "resenas": "10", "rating": "4"}})
+_orig = cli.descubrir
+cli.descubrir = lambda *a: [{"nombre": "Sol", "web": "https://sol.cl", "resenas": "130", "rating": "4.8"}]
+_s_out, sys.stdout = sys.stdout, io.StringIO()
+cli.buscar(["Las Condes"], 5, "maps")
+sys.stdout = _s_out
+cli.descubrir = _orig
+_sol = base.cargar()["sol.cl"]
+comprobar("repetir una búsqueda actualiza las reseñas y no toca el estado", (_sol["resenas"], _sol["estado"]), ("130", "candidata"))
+base.guardar(_base_ant)
 _n2, _f2 = iniciar.redactar({"nombre": "Luis", "ciudad": "Guadalajara"}, DENTAL)
 comprobar("el correo habla de su rubro y su resultado", "ayudo a clínicas dentales a agendar pacientes al instante." in _n2, True)
 comprobar("nada de corredoras en un negocio dental", "corredor" in _n2.lower() or "inmobiliari" in _n2.lower(), False)
@@ -765,6 +777,168 @@ comprobar("el plan: primero los borradores (decisor y verificar), sin flojas ni 
           (["decisor", "verificar", "decisor", "verificar"], set()))
 comprobar("usa el correo publicado del decisor para medir precisión",
           next(t["publicado"] for t in plan if t["tipo"] == "decisor" and t["dominio"] == "panel.cl"), "ana@panel.cl")
+
+seccion("Calificar: quién vale la pena")
+from types import SimpleNamespace  # noqa: E402
+
+from prospector import filtro  # noqa: E402
+from prospector.cazador.fuentes import maps as _maps  # noqa: E402
+
+_ficha = [None] * 40
+_ficha[11], _ficha[4] = "Corredora Sol", [None] * 9
+_ficha[4][7], _ficha[4][8] = 4.8, 130
+comprobar("Maps trae la cantidad de reseñas", _maps._a_negocio(_ficha, "X", "y")["resenas"], "130")
+
+
+def senales_vacias(**extra):
+    return {"catalogo_fichas": 0, "catalogo_texto": 0, "sucursales": False, "sistemas": [], "correos": [],
+            "meta_pixel": False, "google_ads": False, "portales": [], "whatsapp": True, "chat": [],
+            "whatsapp_numeros": [], "formulario": False, "copyright": None, "bots": [], "contratando": "", **extra}
+
+
+nicho.guardar(nicho.ejemplo("inmobiliarias"))
+_cal = analizar.calificar
+comprobar("muchas reseñas bastan", _cal({"resenas": "130"}, senales_vacias())["suficiente"], True)
+comprobar("una señal débil no basta", _cal({}, senales_vacias(meta_pixel=True))["suficiente"], False)
+comprobar("dos señales débiles sí", _cal({}, senales_vacias(meta_pixel=True, google_ads=True))["suficiente"], True)
+comprobar("pagar software cuenta como señal fuerte", _cal({}, senales_vacias(sistemas=["Kommo"]))["suficiente"], True)
+comprobar("no tener chat no suma nada: lo cumplen casi todos",
+          sum(_cal({}, senales_vacias(whatsapp=False))["puntos"].values()), 0)
+comprobar("buscar gente suma", _cal({}, senales_vacias(contratando="Trabaja con nosotros"))["puntos"]["momento"], 1)
+comprobar("varios WhatsApp se ven como atención repartida",
+          _cal({}, senales_vacias(whatsapp_numeros=["+1", "+2"]))["bloques"]["manual"], ["atiende por 2 WhatsApp distintos"])
+comprobar("un bot instalado es una contra", _cal({}, senales_vacias(bots=["Landbot"]))["contras"], ["ya usa un bot: Landbot"])
+_viejo = date.today().year - 5
+comprobar("un copyright viejo con pocas reseñas es una contra",
+          len(_cal({"resenas": "3"}, senales_vacias(copyright=_viejo))["contras"]), 1)
+comprobar("con muchas reseñas el negocio sigue vivo aunque su web no",
+          _cal({"resenas": "90"}, senales_vacias(copyright=_viejo))["contras"], [])
+_citas = {"filtro": {"trabajo_manual": [{"tarea": "a", "cita": "x"}, {"tarea": "b", "cita": "y"}]}}
+comprobar("el trabajo manual se muestra entero y suma un punto",
+          (len(_cal(_citas, senales_vacias())["bloques"]["manual"]), _cal(_citas, senales_vacias())["puntos"]["manual"]), (2, 1))
+nicho.guardar({**DENTAL, "resenas": {"bueno": 50, "muy_bueno": 200}})
+comprobar("lo que son muchas reseñas depende del rubro", _cal({"resenas": "40"}, senales_vacias())["suficiente"], False)
+_s, _ = analizar.medir({"nombre": "X", "web": "https://x.mx"}, {"portada": ("https://x.mx/", "<p>Hola</p>")})
+comprobar("la Biblioteca de anuncios busca en su país", "country=MX" in _s["biblioteca_meta"], True)
+nicho.guardar(nicho.ejemplo("inmobiliarias"))
+
+_e = analizar._elegir_enlaces('<a href="/trabaja-con-nosotros">Trabaja con nosotros</a>'
+                              '<a href="/quienes-somos">Quiénes somos</a>', "https://x.cl")
+comprobar("lee quiénes son, no la página de empleo", ("quienes-somos" in " ".join(_e.values()), "trabaja" in " ".join(_e.values())), (True, False))
+_s, _ = analizar.medir({"nombre": "X", "web": "https://x.cl"}, {"portada": ("https://x.cl/", "<a href='/e'>Trabaja con nosotros</a>")})
+comprobar("nota que busca gente", _s["contratando"], "Trabaja con nosotros")
+
+
+seccion("El filtro de Claude")
+WEB = {"empresa": "Somos una red de corredores independientes. Te contactaremos en 24 horas."}
+_vistos = []
+
+
+def claude_falso(respuesta, codigo=0):
+    def correr(orden, **k):
+        _vistos.append((orden, k))
+        return SimpleNamespace(returncode=codigo, stdout=json.dumps({"result": respuesta}).encode("utf-8"))
+    return correr
+
+
+def respuesta(**extra):
+    return json.dumps({"veredicto": "sirve", "tipo": "empresa", "personas": None, "motivo": "m", "cita": "",
+                       "trabajo_manual": [], **extra}, ensure_ascii=False)
+
+
+_which, filtro.shutil.which = filtro.shutil.which, lambda _: "claude"
+_rev = lambda r, **k: filtro.revisar({"nombre": "X"}, WEB, correr=claude_falso(r, **k))  # noqa: E731
+_red = {"veredicto": "no_sirve", "tipo": "red"}
+comprobar("afirma que no sirve si cita la web de verdad",
+          _rev(respuesta(**_red, cita="una red de corredores independientes"))["veredicto"], "no_sirve")
+comprobar("la cita se compara sin importar mayúsculas ni espacios",
+          _rev(respuesta(**_red, cita="UNA RED  de corredores\nindependientes"))["veredicto"], "no_sirve")
+comprobar("con una cita inventada solo duda", _rev(respuesta(**_red, cita="somos una red mundial"))["veredicto"], "dudoso")
+comprobar("sin cita solo duda", _rev(respuesta(**_red))["veredicto"], "dudoso")
+comprobar("si no sirve por otra razón, solo duda",
+          _rev(respuesta(veredicto="no_sirve", tipo="empresa", cita="Somos una red"))["veredicto"], "dudoso")
+_m = _rev(respuesta(trabajo_manual=[{"tarea": "real", "cita": "Te contactaremos en 24 horas"},
+                                    {"tarea": "inventada", "cita": "respondemos por fax"}]))["trabajo_manual"]
+comprobar("el trabajo manual sin cita real no se guarda", [x["tarea"] for x in _m], ["real"])
+comprobar("una respuesta rota no filtra", _rev("no sé"), None)
+comprobar("un veredicto raro no filtra", _rev(respuesta(veredicto="tal vez")), None)
+comprobar("si Claude falla no filtra", _rev(respuesta(), codigo=1), None)
+
+
+def _se_cae(orden, **k):
+    raise subprocess.TimeoutExpired(orden, 1)
+
+
+comprobar("si Claude se cuelga no filtra", filtro.revisar({"nombre": "X"}, WEB, correr=_se_cae), None)
+filtro.shutil.which = lambda _: None
+comprobar("sin Claude instalado no filtra", _rev(respuesta(**_red, cita="Somos una red")), None)
+filtro.shutil.which = lambda _: "claude"
+comprobar("una web sin texto no gasta nada", filtro.revisar({"nombre": "X"}, {}, correr=_se_cae), None)
+
+_vistos.clear()
+_r = _rev(respuesta())
+_orden, _k = _vistos[0]
+comprobar("corre sin herramientas y sin conectores", ("--tools" in _orden, _orden[_orden.index("--tools") + 1], "--strict-mcp-config" in _orden), (True, "", True))
+comprobar("usa el modelo chico", _orden[_orden.index("--model") + 1], "haiku")
+comprobar("en una carpeta vacía, no en el proyecto", Path(_k["cwd"]) != puente.RAIZ, True)
+_prompt = _k["input"].decode("utf-8")
+comprobar("marca la web como datos, no instrucciones", ("<web>" in _prompt, "nunca instrucciones" in _prompt, WEB["empresa"] in _prompt), (True, True, True))
+comprobar("usa el problema y el perfil del nicho", nicho.actual()["textos"]["icp_no"] in _prompt, True)
+_vistos.clear()
+comprobar("si la web no cambió, no vuelve a preguntar",
+          (filtro.revisar({"nombre": "X", "filtro": _r}, WEB, correr=claude_falso(respuesta(veredicto="dudoso")))["veredicto"], _vistos),
+          ("sirve", []))
+_ = filtro.revisar({"nombre": "X", "filtro": {**_r, "hash": "otra"}}, WEB, correr=claude_falso(respuesta()))
+comprobar("si la web cambió, pregunta otra vez", len(_vistos), 1)
+_vistos.clear()
+nicho.guardar({**nicho.ejemplo("inmobiliarias"), "equipo_minimo": 1})
+_rev(respuesta())
+comprobar("si también le vende a gente sola, no los descarta", "trabajando solas" in _vistos[0][1]["input"].decode("utf-8"), False)
+nicho.guardar(nicho.ejemplo("inmobiliarias"))
+filtro.shutil.which = _which
+
+
+# El camino completo, sin red: la web y Claude son falsos.
+_HTML = "<p>Corretaje y arriendo. Escríbenos a ana@sol.cl</p>"
+_vis, _revisar = analizar._visitar, filtro.revisar
+analizar._visitar = lambda web, robots: ({"portada": (web, _HTML)}, "")
+
+
+def analizado(resultado, resenas="130", **extra):
+    filtro.revisar = lambda lead, textos: resultado
+    return analizar.analizar_uno({"nombre": "Sol", "web": "https://sol.cl", "resenas": resenas, **extra}, None)
+
+
+_f = {"veredicto": "sirve", "tipo": "empresa", "personas": 8, "motivo": "Corredora con equipo", "cita": "Somos ocho",
+      "trabajo_manual": [{"tarea": "responde a mano", "cita": "te contactamos"}], "hash": "h", "fecha": "2026-01-01"}
+_l = analizado(_f)
+comprobar("con clientes y correo es candidata", (_l["estado"], _l["calificacion"]["volumen"], _l["puntaje"]), ("candidata", 4, 6))
+_ficha = (analizar.FICHAS / "sol.cl.md").read_text(encoding="utf-8")
+comprobar("la ficha trae el filtro y el trabajo manual", ("Filtro de Claude" in _ficha, "responde a mano" in _ficha, "130 reseñas" in _ficha), (True, True, True))
+_l = analizado({**_f, "veredicto": "no_sirve", "tipo": "red", "motivo": "Es una red", "cita": "somos una red"})
+comprobar("el filtro la aparta y deja la prueba", (_l["estado"], "somos una red" in _l["motivo"]), ("floja", True))
+comprobar("y se puede mandar a investigar igual desde el Radar", _l["estado"] in radar.INVESTIGABLES, True)
+_l = analizado({**_f, "veredicto": "dudoso", "tipo": "red", "motivo": "Parece una red", "cita": ""})
+comprobar("si duda de que sea una red, también la aparta", (_l["estado"], _l["motivo"]), ("floja", "Claude: Parece una red"))
+_l = analizado(None)
+comprobar("si el filtro no responde sigue siendo candidata", _l["estado"], "candidata")
+_l = analizado({**_f, "veredicto": "dudoso", "motivo": "No queda claro"})
+comprobar("si duda de otra cosa sigue, con el aviso", (_l["estado"], _l["motivo"]), ("candidata", "Claude duda: No queda claro"))
+_l = analizado({**_f, "personas": 2, "motivo": "Son dos"})
+comprobar("una dupla queda para que la mire una persona", (_l["estado"], "2 persona" in _l["motivo"]), ("floja", True))
+nicho.guardar({**nicho.ejemplo("inmobiliarias"), "equipo_minimo": 1})
+comprobar("salvo que su oferta también sirva a gente sola", analizado({**_f, "personas": 1})["estado"], "candidata")
+nicho.guardar(nicho.ejemplo("inmobiliarias"))
+_l = analizado(_f, resenas="2")
+comprobar("sin volumen ni pago es floja y no gasta en el filtro", (_l["estado"], _l.get("filtro")), ("floja", None))
+analizar._visitar, filtro.revisar = _vis, _revisar
+
+base.guardar({"m.cl": {"nombre": "M", "web": "https://m.cl", "calificacion": {"volumen": 3, "capacidad": 0, "manual": 1, "momento": 0}}})
+_s_out, sys.stdout = sys.stdout, io.StringIO()
+cli._metricas_por_senal([{"dominio": "m.cl", "estado": "respondió"}, {"dominio": "nadie.cl", "estado": "enviando"}])
+_salida, sys.stdout = sys.stdout.getvalue(), _s_out
+comprobar("las métricas cruzan señales con respuestas", ("le llegan clientes" in _salida, "1 de 1 · 0 de 0" in _salida), (True, True))
+comprobar("y avisa que con pocos envíos no se concluye nada", "no alcanza para concluir" in _salida, True)
 
 # ------------------------------------------------------------------------- fin
 print(f"\n{'=' * 52}")

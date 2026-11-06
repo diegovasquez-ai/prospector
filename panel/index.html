@@ -243,6 +243,7 @@ details pre { white-space: pre-wrap; font-size: 12px; max-height: 420px; overflo
     <select id="f-comuna" onchange="pintarRadar()"></select>
     <select id="f-orden" onchange="pintarRadar()">
       <option value="puntaje">Más oportunidad primero</option>
+      <option value="resenas">Más reseñas en Google</option>
       <option value="rating">Mejor nota en Google</option>
       <option value="nombre">Nombre</option>
       <option value="reciente">Más recientes</option>
@@ -715,6 +716,7 @@ function pintarRadar() {
     .filter((f) => !q || norm([f.nombre, f.web, f.correo, f.categoria, f.direccion].join(" ")).includes(q));
   // "puntaje" ya viene ordenado del servidor: candidatas primero y de más a menos.
   if (orden === "rating") visibles.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+  if (orden === "resenas") visibles.sort((a, b) => (parseFloat(b.resenas) || 0) - (parseFloat(a.resenas) || 0));
   else if (orden === "nombre") visibles.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   else if (orden === "reciente") visibles.sort((a, b) => (b.descubierta || "").localeCompare(a.descubierta || ""));
   $("cuantas").textContent = `${visibles.length} de ${filas.length}`;
@@ -734,10 +736,10 @@ function filaRadar(f) {
   const off = apagada(f);
   return h("button", { class: "fila" + (fichaR && fichaR.clave === f.clave ? " activo" : "") + (off ? " apagada" : ""),
     onclick: () => abrirFicha(f.clave) },
-    h("span", { class: "nota-op " + nivel(f.puntaje), title: "Oportunidad: puede pagar + le falta algo" }, off && !f.puntaje ? "—" : f.puntaje),
+    h("span", { class: "nota-op " + nivel(f.puntaje), title: "Oportunidad: clientes, capacidad de pago, trabajo manual y momento" }, off && !f.puntaje ? "—" : f.puntaje),
     h("span", {},
       h("span", { class: "n" }, f.nombre),
-      h("span", { class: "m" }, [(f.categoria || "").split(",")[0], f.comuna, f.rating ? `★ ${f.rating}` : ""].filter(Boolean).join(" · ")),
+      h("span", { class: "m" }, [(f.categoria || "").split(",")[0], f.comuna, f.rating ? `★ ${f.rating}${f.resenas ? ` (${f.resenas})` : ""}` : ""].filter(Boolean).join(" · ")),
       h("span", { class: "m" }, [f.correo ? `${f.correo}${f.correo_estado ? ` (${f.correo_estado})` : ""}` : "sin correo",
         f.telefono, sinWww(f.web)].filter(Boolean).join(" · ")),
       off && f.motivo ? h("span", { class: "m" }, f.motivo) : h("span", { class: "senales" },
@@ -788,12 +790,12 @@ function pintarFicha() {
       par("Correo", d.correo ? [d.correo, " ", h("span", { class: "chip " + d.correo_estado }, d.correo_estado || "?")] : "No publica uno usable"),
       par("Teléfono", d.telefono || "—"),
       par("Dirección", d.direccion || "—"),
-      par("Google", d.rating ? `${d.rating} ★` : "sin nota"),
+      par("Google", d.rating ? `${d.rating} ★${d.resenas ? ` · ${d.resenas} reseñas` : ""}` : "sin nota"),
       par("Categoría", d.categoria || "—"),
       par("Encontrada", [d.comuna, d.descubierta].filter(Boolean).join(" · ")))),
     d.puede_pagar.length || d.le_falta.length ? bloque(`Por qué tiene ${d.puntaje} de oportunidad`,
-      d.puede_pagar.length ? [h("b", {}, "Puede pagar"), h("ul", {}, ...d.puede_pagar.map((x) => h("li", {}, x)))] : null,
-      d.le_falta.length ? [h("b", { style: "display:block;margin-top:8px" }, "Le falta"),
+      d.puede_pagar.length ? [h("b", {}, "Le llegan clientes y puede pagar"), h("ul", {}, ...d.puede_pagar.map((x) => h("li", {}, x)))] : null,
+      d.le_falta.length ? [h("b", { style: "display:block;margin-top:8px" }, "Trabajo manual y momento"),
         h("ul", {}, ...d.le_falta.map((x) => h("li", {}, x)))] : null) : null,
     consulta ? bloque("Cómo le entra una consulta", h("p", { style: "margin:0" }, consulta),
       a.biblioteca_meta ? h("p", { style: "margin:6px 0 0" },

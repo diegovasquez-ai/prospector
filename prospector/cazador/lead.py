@@ -31,6 +31,7 @@ CAMPOS = {
     "confianza": "",      # alta | media | baja
     # --- solo Google Maps --------------------------------------------------
     "rating": "",
+    "resenas": "",
     "categoria": "",
     "lat": "",
     "lng": "",

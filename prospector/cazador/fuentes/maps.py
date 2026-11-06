@@ -141,6 +141,7 @@ def _a_negocio(ficha, ciudad: str, nicho: str) -> dict | None:
         direccion=g(ficha, 39) if isinstance(g(ficha, 39), str) else "",
         categoria=", ".join(categorias[:3]),
         rating=_numero(g(ficha, 4, 7)),
+        resenas=_numero(g(ficha, 4, 8)),
         lat=_numero(g(ficha, 9, 2)),
         lng=_numero(g(ficha, 9, 3)),
         ciudad=ciudad,

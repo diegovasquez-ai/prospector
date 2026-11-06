@@ -55,6 +55,8 @@
     "minimo": 30
   },
   "paginas_equipo": ["corredores", "agentes"],
+  "resenas": {"bueno": 20, "muy_bueno": 100},
+  "equipo_minimo": 3,
   "textos": {
     "problema": "Las consultas que llegan fuera de horario o sin seguimiento se pierden.",
     "resultado": "responder sus consultas al instante, agendar visitas y hacer seguimiento",

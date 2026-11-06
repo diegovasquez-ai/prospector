@@ -7,7 +7,9 @@ verdad, y por qué habla bien de ellos. Eso vale más que tres halagos genérico
 
 Trabajas en la carpeta del proyecto. Lee primero:
 
-- `fichas/<dominio>.md` — lo que ya midió el código (canales, anuncios, correos, texto de 4 páginas)
+- `fichas/<dominio>.md` — lo que ya midió el código (reseñas, canales, anuncios, correos, texto de
+  5 páginas) y la primera lectura del filtro de Claude. Esa lectura y el trabajo manual que cita
+  son pistas: compruébalas en su web antes de usarlas. Si no se sostienen, manda lo que encuentres.
 - `negocio.md` — la oferta, el problema que buscas, el ICP y el caso real
 - `nicho.json` — el rubro, el país, sus portales y a quién descartar
 - `plantillas/secuencia.md` — la estructura de los tres correos
