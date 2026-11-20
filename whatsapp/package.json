@@ -1,0 +1,12 @@
+{
+  "name": "prospector-whatsapp",
+  "private": true,
+  "description": "Puente local a WhatsApp (API no oficial, Baileys). Lo arranca el panel: un proceso por número.",
+  "type": "module",
+  "dependencies": {
+    "@diegomarvid/whatsapp-assistant": "https://github.com/IgnacioMiranda6/whatsapp-assistant/archive/ffb95351d8162228015b0234dee8b7875c1fd4b4.tar.gz"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

@@ -13,6 +13,7 @@ from datetime import datetime
 
 from . import base as bd
 from . import config, correos, iniciar, nicho, preparar
+from . import wa_prospeccion as wp
 from .analizar import FICHAS, analizar
 from .puente import exclusiones
 
@@ -64,6 +65,8 @@ def _fila(l: dict, b: dict | None, fuera: dict) -> dict:
 def listar() -> list[dict]:
     """Todas, las que más prometen primero."""
     borradores = {b["dominio"]: b for b in correos.listar()}
+    # Los que van por WhatsApp: se ve en qué va su mensaje.
+    borradores |= {b["dominio"]: {**b, "estado": "WhatsApp: " + b.get("estado", "")} for b in wp.listar()}
     fuera = exclusiones.cargar()
     filas = [_fila(l, borradores.get(bd.clave(l)), fuera) for l in bd.cargar().values()]
     return sorted(filas, key=lambda f: (ORDEN.get(f["estado"], 9), -f["puntaje"], f["nombre"].lower()))
@@ -74,7 +77,10 @@ def detalle(clave: str) -> dict:
     if l is None:
         raise KeyError(clave)
     b = None
-    if not clave.startswith("n:"):
+    if wp.existe(clave):
+        b = wp.leer(clave)
+        b = {**b, "estado": "WhatsApp: " + b.get("estado", "")}
+    elif not clave.startswith("n:"):
         try:
             b = correos.leer(clave)
         except (FileNotFoundError, ValueError):
@@ -160,6 +166,8 @@ def investigar(clave: str) -> str:
         return f"Está {l.get('estado')}: {l.get('motivo') or 'no es para escribirle'}"
     if correos.ruta(clave).exists():
         return "Ya tiene borrador: míralo en Correos"
+    if wp.existe(clave):
+        return "Va por WhatsApp: cada negocio va por un solo canal"
     falta = iniciar.pendiente()
     if falta:
         return falta

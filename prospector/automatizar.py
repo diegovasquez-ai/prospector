@@ -43,15 +43,32 @@ def instalar(n: int = 20, hora: str = "07:00") -> int:
         "@echo off\r\n"
         f'cd /d "{RAIZ}"\r\n'
         f'echo ===== %date% %time% >> "datos\\preparar.log"\r\n'
-        f'"{sys.executable}" prospector.py preparar -n {n} >> "datos\\preparar.log" 2>&1\r\n',
+        f'"{sys.executable}" prospector.py diario -n {n} >> "datos\\preparar.log" 2>&1\r\n',
         encoding="utf-8")
-    r = subprocess.run(
-        ["schtasks", "/Create", "/F", "/TN", TAREA, "/TR", f'"{PREPARAR}"',
-         "/SC", "WEEKLY", "/D", "MON,TUE,WED,THU,FRI", "/ST", hora],
-        capture_output=True, text=True)
+    # Con PowerShell la tarea corre aunque a esa hora el PC estuviera apagado: parte al encenderlo.
+    h, m = (hora.split(":") + ["0"])[:2]
+    ps = (f"$a = New-ScheduledTaskAction -Execute '{PREPARAR}'; "
+          f"$t = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday -At '{int(h):02d}:{int(m):02d}'; "
+          "$s = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 4) -DontStopIfGoingOnBatteries -AllowStartIfOnBatteries; "
+          f"Register-ScheduledTask -TaskName '{TAREA}' -Action $a -Trigger $t -Settings $s -Force | Out-Null")
+    r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True)
+    if r.returncode != 0:
+        r = subprocess.run(
+            ["schtasks", "/Create", "/F", "/TN", TAREA, "/TR", f'"{PREPARAR}"',
+             "/SC", "WEEKLY", "/D", "MON,TUE,WED,THU,FRI", "/ST", hora],
+            capture_output=True, text=True)
     if r.returncode != 0:
         print(f"  ! Windows no dejó crear la tarea: {(r.stderr or r.stdout).strip()}")
         return 1
+
+    from .sincronizar import credenciales
+    if credenciales()[0]:
+        # Hay servidor: el que envía es él. Un panel en el PC no hace falta (y no debe enviar).
+        if ARRANQUE.exists():
+            ARRANQUE.unlink()
+        print(f"  ✓ De lunes a viernes a las {hora}: se investigan {n} correos en modo rápido y se suben al servidor")
+        print("    (si el PC estaba apagado a esa hora, parte apenas lo enciendas; log en datos\\preparar.log)")
+        return 0
 
     ARRANQUE.write_text(
         "@echo off\r\n"

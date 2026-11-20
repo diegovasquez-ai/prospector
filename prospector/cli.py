@@ -230,6 +230,8 @@ def main(argv: list[str] | None = None) -> int:
     pa = sub.add_parser("panel", help="Fases 7-9: aprobar, afinar y enviar desde el navegador")
     pa.add_argument("--puerto", type=int, default=8765)
     pa.add_argument("--sin-navegador", action="store_true")
+    pa.add_argument("--host", default="127.0.0.1",
+                    help="0.0.0.0 para un servidor (exige PANEL_CLAVE). Por defecto, solo tu computador")
 
     pr = sub.add_parser("preparar", help="Investiga y redacta N correos sin abrir Claude Code")
     pr.add_argument("-n", type=int, default=20, help="Cuántos negocios (20)")
@@ -245,7 +247,13 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("metricas", help="Fase 10: cómo va la semana")
 
-    sub.add_parser("whatsapp", help="Busca el WhatsApp de tus borradores que no lo tienen")
+    di = sub.add_parser("diario", help="Lo de cada mañana: investiga N correos en modo rápido, los sube y busca más negocios si faltan")
+    di.add_argument("-n", type=int, default=20)
+    su = sub.add_parser("subir", help="Sube al servidor los borradores investigados en tu PC")
+    su.add_argument("--forzar", action="store_true", help="Reemplaza también los que allá siguen por revisar")
+
+    wa = sub.add_parser("whatsapp", help="Busca el WhatsApp de tus borradores que no lo tienen")
+    wa.add_argument("--detener", action="store_true", help="Apaga los puentes de WhatsApp que queden corriendo")
 
     sub.add_parser("treg", help="Conecta Treg (buscar y verificar el correo del decisor)")
     co = sub.add_parser("contactos", help="Prueba de Treg: ¿encuentra el correo del decisor? No toca nada")
@@ -261,13 +269,24 @@ def main(argv: list[str] | None = None) -> int:
         return automatizar.quitar() if ns.quitar else automatizar.instalar(ns.n, ns.hora)
     if ns.cmd == "metricas":
         return metricas()
-    if ns.cmd == "whatsapp":
-        from . import config, whatsapp
+    if ns.cmd == "diario":
+        from . import diario
+        return diario.diario(ns.n)
+    if ns.cmd == "subir":
+        from . import config, sincronizar
         config.cargar()
+        return sincronizar.subir(ns.forzar)
+    if ns.cmd == "whatsapp":
+        from . import config, wa_puente, whatsapp
+        config.cargar()
+        if ns.detener:
+            wa_puente.detener_todos()
+            print("> Puentes de WhatsApp apagados. Se vuelven a conectar al abrir el panel.")
+            return 0
         return whatsapp.completar()
     if ns.cmd == "panel":
         from .panel import abrir
-        return abrir(ns.puerto, navegador=not ns.sin_navegador)
+        return abrir(ns.puerto, navegador=not ns.sin_navegador, host=ns.host)
     if ns.cmd == "preparar":
         from . import config
         from .preparar import preparar

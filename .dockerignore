@@ -1,0 +1,19 @@
+# Nada personal ni pesado entra a la imagen: tus datos van en el volumen /data.
+.git
+.env
+.env.*
+!.env.example
+negocio.md
+nicho.json
+firma.txt
+comunas.txt
+datos/
+fichas/
+borradores/
+.whatsapp/
+whatsapp/node_modules/
+.playwright-mcp/
+.claude/settings.local.json
+__pycache__/
+*.py[cod]
+.venv/

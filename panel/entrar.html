@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Prospector · Entrar</title>
+<link rel="icon" href="/logo.svg">
+<style>
+:root { --marca: #1a9dfd; --accent: #0a78d1; --bg: #000; --panel: #0f1216; --ink: #e8edf3; --muted: #8592a3; --line: #232a33; --bad: #ff8f85; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+form { width: 100%; max-width: 360px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 28px 24px; }
+.logo { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.logo img { width: 48px; height: 48px; }
+.logo b { display: block; font-size: 20px; letter-spacing: -.01em; }
+.logo small { color: var(--muted); }
+label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+input { width: 100%; min-height: 46px; background: #000; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; }
+input:focus { outline: 2px solid var(--marca); outline-offset: -1px; border-color: transparent; }
+button { width: 100%; min-height: 46px; margin-top: 14px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+button:disabled { opacity: .6; cursor: wait; }
+.error { color: var(--bad); font-size: 13px; min-height: 20px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<form id="f">
+  <div class="logo"><img src="/logo.svg" alt=""><span><b>Prospector</b><small>Prospección en frío</small></span></div>
+  <label for="correo">Correo</label>
+  <input type="email" id="correo" autocomplete="username" autofocus>
+  <label for="clave" style="margin-top:12px">Contraseña del panel</label>
+  <input type="password" id="clave" autocomplete="current-password" required>
+  <button type="submit" id="b">Entrar</button>
+  <div class="error" id="e" role="alert"></div>
+</form>
+<script>
+document.getElementById("f").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const b = document.getElementById("b"), e = document.getElementById("e");
+  b.disabled = true; e.textContent = "";
+  try {
+    const r = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json", "X-Panel": "1" },
+      body: JSON.stringify({ correo: document.getElementById("correo").value, clave: document.getElementById("clave").value }) });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok) return location.reload();
+    e.textContent = d.error || "No pude entrar";
+  } catch { e.textContent = "No hay conexión con el panel"; }
+  b.disabled = false;
+});
+</script>
+</body>
+</html>

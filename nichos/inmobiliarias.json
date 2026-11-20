@@ -57,6 +57,19 @@
   "paginas_equipo": ["corredores", "agentes"],
   "resenas": {"bueno": 20, "muy_bueno": 100},
   "equipo_minimo": 3,
+  "verificar": {
+    "es": "una inmobiliaria o corredora de propiedades",
+    "criterio": "vende, arrienda o administra propiedades (casas, departamentos, oficinas, terrenos) para sus clientes: publica propiedades, o dice que las vende, las arrienda o las administra",
+    "no_es": "un curso, academia o escuela de corredores; un estudio de abogados, una notaría, un tasador o un banco; una constructora o un estudio de arquitectura",
+    "nombre_no": ["curso", "academia", "escuela", "capacitacion", "diplomado", "colegio", "abogad", "notari",
+                  "arquitect", "constructora", "hipotecari", "tasacion", "tasador", "software", "crm"],
+    "categoria_no": ["escuela", "constructor", "abogado", "arquitect", "notari", "impres"],
+    "nombre_si": ["propiedades", "inmobiliari", "corredor", "corretaje", "bienes raices", "realty",
+                  "real estate", "broker", "rent", "home", "hogar"],
+    "categoria_si": ["agencia inmobiliaria", "agentes inmobiliarios", "agente inmobiliario", "inmobiliaria",
+                     "agencia de bienes inmuebles", "administracion de propiedades", "agencia de alquiler",
+                     "consultor inmobiliario"]
+  },
   "textos": {
     "problema": "Las consultas que llegan fuera de horario o sin seguimiento se pierden.",
     "resultado": "responder sus consultas al instante, agendar visitas y hacer seguimiento",

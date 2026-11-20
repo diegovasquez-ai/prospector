@@ -5,10 +5,19 @@ borradores/
 
 # Quién eres y tus claves: cada uno crea los suyos con `python prospector.py iniciar`.
 .env
-negocio.md
-nicho.json
-firma.txt
-comunas.txt
+.env.*
+!.env.example
+/negocio.md
+/nicho.json
+/firma.txt
+/comunas.txt
+# semilla/ es opcional: si despliegas desde un repo PRIVADO, ahí van negocio.md, nicho.json...
+# para que el servidor parta con ellos. En un repo público, nunca.
+semilla/
+
+# Sesiones de WhatsApp: dan acceso a tus números y a sus chats.
+.whatsapp/
+whatsapp/node_modules/
 
 # Capturas de pantalla con datos y ajustes locales.
 .playwright-mcp/
@@ -17,3 +26,7 @@ comunas.txt
 __pycache__/
 *.py[cod]
 .venv/
+
+# Audios (el del pitch vive en datos/audios/, en el servidor)
+*.ogg
+*.opus

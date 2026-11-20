@@ -35,13 +35,19 @@ CARPETA = RAIZ / "borradores"
 CANDADO = threading.RLock()
 EDITABLES = ("por revisar", "aprobado", "rechazado")
 LLAVE = re.compile(r"\{[^}]*\}")
-MAX_PALABRAS = 120
-# El correo 1 solo busca que respondan: si nombra la herramienta o pide una
-# reunión, ya está vendiendo. "Agente" solo cuenta si es de IA: el agente
-# de una ficha (inmobiliario, de viajes) es un dato válido.
-VENDE = re.compile(r"\b(agente (de IA|virtual|inteligente)|inteligencia artificial|IA|CRM|"
-                   r"automatiz\w*|chatbot|bot|reuni[oó]n|llamada|videollamada|agendemos|"
-                   r"diagn[oó]stico)\b", re.I)
+MAX_PALABRAS = 90
+# Lo que delata a un modelo (plantillas/secuencia.md, "Lo que delata a la IA"). Se busca
+# sin acentos y en minúscula. Solo avisa: el usuario decide.
+SUENA_IA = re.compile(r"se dan? ese trabajo|dice (mucho|mas|harto) (de|que|sobre)|habla (muy )?bien de|"
+                      r"se nota el cuidado|no es menor|dando vueltas|me quede pensando|"
+                      r"lo que viene despues|el tiempo es lo unico|al final del dia|probablemente|"
+                      r"vale oro|no es casualidad|;")
+# El correo 1 solo busca que respondan. Puede decir con sinceridad y en palabras
+# simples qué hace quien escribe ("sistemas con IA para inmobiliarias"), pero si
+# suelta jerga de producto o pide una reunión, ya está vendiendo. "Agente" solo
+# cuenta si es de IA: el agente de una ficha (inmobiliario, de viajes) es un dato válido.
+VENDE = re.compile(r"\b(agente (de IA|virtual|inteligente)|CRM|chatbot|bot|reuni[oó]n|llamada|"
+                   r"videollamada|agendemos|diagn[oó]stico)\b", re.I)
 
 
 def ruta(dominio: str):
@@ -84,6 +90,14 @@ def _plano(s: str) -> str:
     return unicodedata.normalize("NFD", s or "").encode("ascii", "ignore").decode().lower()
 
 
+def _frase(seccion: str) -> str:
+    """La frase citada (> ...) bajo '## <seccion>' de negocio.md, o '' si no está."""
+    ruta = RAIZ / "negocio.md"
+    texto = ruta.read_text(encoding="utf-8") if ruta.exists() else ""
+    m = re.search(rf"^## {re.escape(seccion)}.*?^> ?(.+?)$", texto, re.M | re.S)
+    return m.group(1).strip() if m else ""
+
+
 def molde(b: dict) -> str:
     """
     El asunto sin el nombre de la persona ni el de la empresa: lo que queda es
@@ -120,6 +134,21 @@ def revisar(b: dict) -> tuple[list[str], list[str]]:
             problemas.append(f"El correo {i} está vacío")
     if correos and palabras(correos[0].get("cuerpo", "")) > MAX_PALABRAS:
         avisos.append(f"El correo 1 pasa de {MAX_PALABRAS} palabras")
+    for i, c in enumerate(correos, 1):
+        cuerpo = c.get("cuerpo") or ""
+        # El guion largo se pierde al quitar acentos: se mira en el texto original.
+        tics = [m.group(0) for m in SUENA_IA.finditer(_plano(cuerpo))] + (["—"] if "—" in cuerpo else [])
+        tics = list(dict.fromkeys(tics))
+        if tics:
+            avisos.append(f"El correo {i} suena a IA ({', '.join(tics)}): dilo más simple, "
+                          "como en «Lo que delata a la IA» de plantillas/secuencia.md")
+    if correos:
+        # Fuera la frase de Experiencia (trae su propio número) y los años: cuentan las demás.
+        resto = (correos[0].get("cuerpo") or "").replace(_frase("Experiencia"), "")
+        cifras = [x for x in re.findall(r"\d+(?:[.,]\d+)*", resto) if not re.fullmatch(r"(19|20)\d\d", x)]
+        if len(cifras) > 1:
+            avisos.append(f"El correo 1 lleva {len(cifras)} cifras ({', '.join(cifras)}): con una, "
+                          "redonda, suena a persona; más, suena a informe")
     if correos and re.search(r"https?://|www\.", correos[0].get("cuerpo", "")):
         avisos.append("El correo 1 lleva un enlace: en frío resta entregabilidad")
     # En el orden en que aparecen, sin repetir.

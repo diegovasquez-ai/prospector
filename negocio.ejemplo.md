@@ -59,6 +59,14 @@ En una reunión de 20 minutos se mide su número actual, y de ahí sale la propu
 
 Precio: piloto pequeño (un solo problema resuelto en poco tiempo) → proyecto → mensualidad.
 
+## Cómo escribo por WhatsApp
+
+El agente de WhatsApp y "Sugerir respuesta" escriben como tú a partir de esto. Pega
+aquí 5 a 10 mensajes tuyos reales (a clientes, no a amigos) y anota las palabras que
+usas y las que nunca usarías (por ejemplo: "digo «consultas», nunca «leads»").
+
+- (pega tus mensajes aquí)
+
 ## Firma
 
 Vive en `firma.txt` y el panel la añade al final de cada correo. No va en

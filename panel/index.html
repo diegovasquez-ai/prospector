@@ -4,20 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Prospector</title>
-<link rel="icon" href="data:,">
+<link rel="icon" href="/logo.svg">
 <style>
+/* Colores: azul #1A9DFD y negro. --accent es un azul un poco más hondo para
+   que el texto blanco sobre los botones se lea bien. */
 :root {
-  --bg: #f5f4f0; --panel: #ffffff; --ink: #1d1f21; --muted: #6b6f76; --line: #e3e1db;
-  --chip: #eeede8; --accent: #1f6f5c; --accent-ink: #ffffff; --accent-soft: #e3f1ec;
+  --marca: #1a9dfd; --ancho-nav: 232px;
+  --bg: #f4f6f9; --panel: #ffffff; --ink: #0b0d10; --muted: #5f6b7a; --line: #e2e7ee;
+  --chip: #edf1f6; --accent: #0a78d1; --accent-ink: #ffffff; --accent-soft: #e2f1fe;
   --warn: #8a4b00; --warn-bg: #fff3dc; --bad: #b42318; --bad-bg: #fdecea;
-  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.04);
+  --nav: #000000; --nav-ink: #e6ebf2; --nav-muted: #8592a3;
+  --shadow: 0 1px 2px rgba(10,20,40,.05), 0 4px 16px rgba(10,20,40,.05);
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #131416; --panel: #1b1d20; --ink: #e9e7e2; --muted: #9a9ea6; --line: #2b2e33;
-    --chip: #25282c; --accent: #4fb49a; --accent-ink: #0b1512; --accent-soft: #17302a;
+    --bg: #0b0d10; --panel: #13171c; --ink: #e8edf3; --muted: #94a0ae; --line: #232a33;
+    --chip: #1b2129; --accent: #3aaaff; --accent-ink: #03111d; --accent-soft: #0f2b44;
     --warn: #f2b660; --warn-bg: #352812; --bad: #ff8f85; --bad-bg: #3a1a18;
-    --shadow: none;
+    --nav: #000000; --shadow: none;
   }
 }
 * { box-sizing: border-box; }
@@ -27,10 +31,38 @@ body { margin: 0; background: var(--bg); color: var(--ink);
 button, input, select, textarea { font: inherit; color: inherit; }
 a { color: var(--accent); }
 
+/* --- menú lateral ---------------------------------------------------------- */
+.lateral { position: fixed; top: 0; bottom: 0; left: 0; width: var(--ancho-nav); z-index: 6; background: var(--nav);
+  color: var(--nav-ink); display: flex; flex-direction: column; gap: 4px; padding: 18px 12px; }
+.contenido { margin-left: var(--ancho-nav); min-width: 0; }
+.logo { display: flex; align-items: center; gap: 10px; padding: 2px 8px 20px; }
+.logo img { width: 42px; height: 42px; }
+.logo b { display: block; font-size: 17px; letter-spacing: -.01em; color: #fff; line-height: 1.2; }
+.logo small { color: var(--nav-muted); font-size: 12px; }
+.seccion-t { color: var(--nav-muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 6px 12px 2px; }
+.sec { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; text-align: left; border: 0;
+  background: transparent; color: var(--nav-ink); padding: 10px 12px; border-radius: 10px; cursor: pointer; font-weight: 560; }
+.sec:hover { background: rgba(255,255,255,.07); }
+.sec.activo { background: rgba(26,157,253,.17); color: #5cbcff; box-shadow: inset 3px 0 0 var(--marca); }
+.sec .etq { margin-left: auto; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; border: 1px solid currentColor;
+  border-radius: 999px; padding: 0 6px; opacity: .75; }
+.sec .num { margin-left: auto; background: var(--marca); color: #00111f; border-radius: 999px; font-size: 11.5px; padding: 0 7px; font-weight: 700; }
+.lateral .pie { margin-top: auto; color: var(--nav-muted); font-size: 12px; padding: 8px 12px; line-height: 1.45; }
+@media (max-width: 900px) {
+  .lateral { position: sticky; width: auto; flex-direction: row; align-items: center; overflow-x: auto; padding: 8px 10px; }
+  .contenido { margin-left: 0; }
+  .logo { padding: 0 6px 0 2px; }
+  .logo img { width: 34px; height: 34px; }
+  .logo span, .seccion-t, .lateral .pie { display: none; }
+  .sec { width: auto; white-space: nowrap; min-height: 40px; }
+  .sec .etq { display: none; }
+}
+
 /* --- barra superior ------------------------------------------------------ */
 header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 18px;
-  flex-wrap: wrap; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
-.marca { font-weight: 650; letter-spacing: -.01em; }
+  flex-wrap: wrap; padding: 10px 20px; min-height: 56px; background: var(--panel); border-bottom: 1px solid var(--line); }
+@media (max-width: 900px) { header { position: static; } }
+.titulo { font-weight: 650; letter-spacing: -.01em; font-size: 16px; }
 .contadores { display: flex; gap: 14px; color: var(--muted); flex-wrap: wrap; }
 .contadores b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .envio { margin-left: auto; display: flex; align-items: center; gap: 10px; }
@@ -124,7 +156,7 @@ details pre { white-space: pre-wrap; font-size: 12px; max-height: 420px; overflo
 .timeline { margin: 0; padding-left: 18px; }
 
 /* --- barra de acciones --------------------------------------------------- */
-.acciones { position: fixed; bottom: 0; left: 290px; right: 0; display: flex; gap: 10px; align-items: center;
+.acciones { position: fixed; bottom: 0; left: calc(var(--ancho-nav) + 290px); right: 0; display: flex; gap: 10px; align-items: center;
   padding: 12px 24px; background: color-mix(in srgb, var(--panel) 92%, transparent);
   backdrop-filter: blur(6px); border-top: 1px solid var(--line); flex-wrap: wrap; }
 @media (max-width: 900px) { .acciones { left: 0; padding: 10px 16px; } }
@@ -203,6 +235,114 @@ details pre { white-space: pre-wrap; font-size: 12px; max-height: 420px; overflo
 .ficha-radar .accion { margin: 12px 0 2px; }
 .ficha-radar .accion small { display: block; color: var(--muted); margin-top: 6px; }
 .cerrar { display: none; }
+
+/* --- whatsapp ------------------------------------------------------------ */
+.wa-vista { padding: 16px 20px 48px; max-width: 1100px; }
+.wa-numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px; }
+.wa-numeros .caja + .caja { margin-top: 0; }
+.wa-numeros .caja h3 { margin: 0 0 6px; font-size: 16px; display: flex; gap: 8px; align-items: center; }
+.wa-qr { display: block; width: 240px; max-width: 100%; margin: 10px 0; border-radius: 8px; background: #fff; padding: 6px; }
+.chip.conectado { background: var(--accent-soft); color: var(--accent); }
+.chip.esperando_qr, .chip.iniciando { background: var(--warn-bg); color: var(--warn); }
+.chip.sesion_cerrada, .chip.desconectado { background: var(--bad-bg); color: var(--bad); }
+.chip.en-cola, .chip.enviado { background: var(--accent-soft); color: var(--accent); }
+.chip.incierto { background: var(--warn-bg); color: var(--warn); }
+.chip.error { background: var(--bad-bg); color: var(--bad); }
+.wa-control { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.wa-control .esp { flex: 1; }
+.wa-datos { color: var(--muted); margin: 8px 0 0; }
+.wa-datos b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.barra { height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; margin: 6px 0 4px; }
+.barra span { display: block; height: 100%; background: var(--accent); }
+.estado-wa { border-radius: 8px; padding: 8px 10px; margin: 8px 0; font-size: 13px; background: var(--chip); }
+.estado-wa.ok { background: var(--accent-soft); color: var(--accent); }
+.estado-wa.warn { background: var(--warn-bg); color: var(--warn); }
+.estado-wa.bad { background: var(--bad-bg); color: var(--bad); }
+.estado-wa .btn { margin: 6px 6px 0 0; }
+.riesgo { border-left: 3px solid var(--warn); }
+.riesgo ul { margin: 6px 0 10px; padding-left: 18px; }
+code { background: var(--chip); padding: 1px 6px; border-radius: 5px; font-size: 13px; }
+.cola-wa { list-style: none; margin: 0; padding: 0; }
+.cola-wa li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.cola-wa li:last-child { border-bottom: 0; }
+.cola-wa .m { color: var(--muted); font-size: 12.5px; grid-column: 1; overflow-wrap: anywhere; }
+.cola-wa .btn { grid-column: 2; grid-row: 1 / span 2; align-self: center; padding: 5px 10px; }
+.cola-wa .wa-botones .btn { grid-column: auto; grid-row: auto; }
+.revisar-wa { padding: 12px 0; border-top: 1px solid var(--line); }
+.revisar-wa:first-of-type { border-top: 0; }
+.revisar-wa textarea { font-size: 14.5px; line-height: 1.5; }
+.loom-aviso { border-left: 3px solid var(--marca); margin-bottom: 12px; }
+.loom-aviso .btn { margin: 8px 8px 0 0; }
+.seg-prog { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.seg-prog textarea { font-size: 13.5px; margin-top: 4px; }
+.paso-metodo + .paso-metodo { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.paso-metodo textarea { font-size: 13.5px; margin-top: 6px; }
+
+/* --- conversaciones ------------------------------------------------------- */
+.conv-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; height: calc(100vh - 92px); }
+.conv-lista { overflow: auto; padding: 8px; }
+.conv-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; width: 100%; text-align: left; border: 0;
+  background: transparent; border-radius: 10px; padding: 10px; cursor: pointer; }
+.conv-item:hover { background: var(--chip); }
+.conv-item.activo { background: var(--accent-soft); }
+.conv-item.interesado { box-shadow: inset 3px 0 0 var(--marca); }
+.conv-item.interesado .n { color: var(--marca); }
+.conv-item .n { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-item .m { grid-column: 1; color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-item .h { color: var(--muted); font-size: 11.5px; text-align: right; }
+.conv-item .nuevo { background: var(--marca); color: #00111f; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 0 7px; justify-self: end; }
+.conv-item .etqs { grid-column: 1 / -1; display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+.etq { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 1px 8px;
+  background: hsl(var(--h) 65% 50% / .16); color: hsl(var(--h) 60% 40%); }
+@media (prefers-color-scheme: dark) { .etq { color: hsl(var(--h) 70% 72%); } }
+.etq button { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0; font-size: 14px; line-height: 1; }
+.conv-etiquetas { padding: 6px 16px; border-bottom: 1px solid var(--line); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.conv-etiquetas input { width: 150px; font-size: 12.5px; padding: 3px 8px; }
+.conv-chat { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.conv-cab { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.conv-cab b { font-size: 16px; }
+.conv-cab small { color: var(--muted); }
+.burbujas { flex: 1; overflow: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; background: var(--bg); }
+.burbuja { max-width: 75%; padding: 7px 11px 5px; border-radius: 12px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; }
+.burbuja.ellos { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); border-top-left-radius: 4px; }
+.burbuja.yo { align-self: flex-end; background: var(--accent-soft); border-top-right-radius: 4px; }
+.burbuja small { display: block; text-align: right; color: var(--muted); font-size: 11px; margin-top: 2px; }
+.burbuja.media { font-style: italic; color: var(--muted); }
+.dia-sep { align-self: center; font-size: 11.5px; color: var(--muted); background: var(--chip); border-radius: 999px; padding: 1px 10px; margin: 6px 0; }
+.conv-bot, .conv-global { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 8px 16px;
+  border-bottom: 1px solid var(--line); background: var(--chip); }
+.conv-global { margin: -8px -8px 8px; border-radius: 12px 12px 0 0; }
+.conv-bot small, .conv-global small { color: var(--muted); flex: 1; min-width: 180px; }
+.conv-bot .btn, .conv-global .btn { padding: 5px 10px; }
+.conv-escribir { border-top: 1px solid var(--line); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.conv-escribir .fila-e { display: flex; gap: 8px; align-items: flex-end; }
+.conv-escribir textarea { min-height: 44px; max-height: 200px; }
+.conv-chat.vacia { justify-content: center; align-items: center; }
+@media (max-width: 1100px) {
+  .conv-grid { grid-template-columns: 1fr; height: auto; }
+  .conv-chat { position: fixed; inset: 0; z-index: 20; border-radius: 0; }
+  .conv-chat.vacia { display: none; }
+}
+
+/* --- crm ------------------------------------------------------------------ */
+.vence { width: 58px; min-height: 42px; border-radius: 10px; display: grid; place-items: center; text-align: center;
+  font-size: 12px; font-weight: 650; background: var(--chip); color: var(--muted); padding: 4px; line-height: 1.2; }
+.vence.atrasado { background: var(--bad-bg); color: var(--bad); }
+.vence.hoy { background: var(--accent); color: var(--accent-ink); }
+.vence.pronto { background: var(--accent-soft); color: var(--accent); }
+.crm .fila { grid-template-columns: 58px minmax(0, 1fr) auto; }
+.chip.etapa-cliente { background: var(--accent-soft); color: var(--accent); }
+.chip.etapa-perdido { background: var(--bad-bg); color: var(--bad); }
+.chip.etapa-respondio, .chip.etapa-pitch { background: var(--warn-bg); color: var(--warn); }
+.proximo-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 120px); gap: 8px; margin-bottom: 8px; }
+.proximo-form select, .proximo-form textarea { grid-column: 1 / -1; }
+input[type=date], input[type=time], input[type=number] { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+.guion { white-space: pre-wrap; background: var(--bg); border-radius: 8px; padding: 10px 12px; margin: 6px 0 4px; font-size: 13.5px; }
+.linea-t { list-style: none; margin: 0; padding: 0; }
+.linea-t li { padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.linea-t li:last-child { border-bottom: 0; }
+.linea-t small { color: var(--muted); margin-right: 6px; font-variant-numeric: tabular-nums; }
+.dijo { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 9px 12px; margin: 10px 0; }
 @media (max-width: 1100px) {
   .radar-grid { grid-template-columns: 1fr; }
   .ficha-radar { position: fixed; inset: 0; max-height: none; z-index: 20; border-radius: 0; padding: 16px; }
@@ -218,12 +358,22 @@ details pre { white-space: pre-wrap; font-size: 12px; max-height: 420px; overflo
 </style>
 </head>
 <body>
+<nav class="lateral" aria-label="Secciones">
+  <div class="logo"><img src="/logo.svg" alt=""><span><b>Prospector</b><small>Prospección en frío</small></span></div>
+  <div class="seccion-t">Primer contacto</div>
+  <button class="sec" id="tab-radar" onclick="mostrar('radar')">Prospectos</button>
+  <button class="sec" id="tab-correos" onclick="mostrar('correos')">Correos</button>
+  <button class="sec" id="tab-whatsapp" onclick="mostrar('whatsapp')">WhatsApp <span class="etq">no oficial</span></button>
+  <div class="seccion-t">Cuando responden</div>
+  <button class="sec" id="tab-conversaciones" onclick="mostrar('conversaciones')">Conversaciones <span class="num" id="num-conv" hidden></span></button>
+  <button class="sec" id="tab-crm" onclick="mostrar('crm')">CRM <span class="num" id="num-crm" hidden></span></button>
+  <div class="pie"><span id="pie-texto">Nada sale sin tu aprobación.</span>
+    <button class="sec" id="salir" hidden style="margin-top:8px;padding-left:0;color:var(--nav-muted)"
+      onclick="api('/api/salir', {}).finally(() => location.reload())">Cerrar sesión</button></div>
+</nav>
+<div class="contenido">
 <header>
-  <span class="marca">Prospector</span>
-  <nav class="tabs">
-    <button class="tab" id="tab-correos" onclick="mostrar('correos')">Correos</button>
-    <button class="tab" id="tab-radar" onclick="mostrar('radar')">Radar</button>
-  </nav>
+  <span class="titulo" id="titulo">Correos</span>
   <span class="contadores" id="contadores"></span>
   <span class="envio" id="envio"></span>
 </header>
@@ -255,12 +405,33 @@ details pre { white-space: pre-wrap; font-size: 12px; max-height: 420px; overflo
     <div class="caja ficha-radar vacia" id="ficha-radar"><p class="vacio">Elige un negocio para ver su ficha.</p></div>
   </div>
 </section>
+<section class="wa-vista" id="vista-whatsapp" hidden><p class="vacio">Cargando WhatsApp…</p></section>
+<section class="radar" id="vista-conversaciones" hidden>
+  <div class="conv-grid">
+    <div class="caja conv-lista" id="conv-lista"><p class="vacio">Cargando…</p></div>
+    <div class="caja conv-chat vacia" id="conv-chat"><p class="vacio">Elige una conversación.</p></div>
+  </div>
+</section>
+<section class="radar crm" id="vista-crm" hidden>
+  <div class="caja loom-aviso" id="crm-loom" hidden></div>
+  <div class="kpis" id="crm-kpis"></div>
+  <div class="herramientas">
+    <input type="search" id="crm-buscar" placeholder="Buscar negocio…" oninput="pintarCRM()">
+    <small id="crm-cuantas"></small>
+  </div>
+  <p class="nota-chica" id="crm-prueba" hidden style="margin:0 0 10px"></p>
+  <div class="radar-grid">
+    <div class="filas" id="crm-filas"><p class="vacio">Cargando…</p></div>
+    <div class="caja ficha-radar vacia" id="crm-ficha"><p class="vacio">Elige un negocio para ver su conversación y su próximo paso.</p></div>
+  </div>
+</section>
 <div class="app" id="vista-correos">
   <aside>
     <div class="filtros" id="filtros"></div>
     <div class="lista" id="lista"></div>
   </aside>
   <main id="main"><p class="vacio">Elige un negocio de la lista.</p></main>
+</div>
 </div>
 <div class="acciones" id="acciones" hidden></div>
 <div class="toast" id="toast"></div>
@@ -274,7 +445,7 @@ const GRUPOS = [
   ["Cerrados", ["terminado", "rechazado", "rebotó", "baja", "descartada"]],
 ];
 const EDITABLES = ["por revisar", "aprobado", "rechazado"];
-const MAX_PALABRAS = 120;
+const MAX_PALABRAS = 90;
 
 let estado = {}, lista = [], filtro = 0, actual = null, temporizador = null;
 
@@ -307,6 +478,7 @@ async function api(ruta, cuerpo) {
     method: "POST", headers: { "Content-Type": "application/json", "X-Panel": "1" }, body: JSON.stringify(cuerpo),
   };
   const r = await fetch(ruta, opciones);
+  if (r.status === 401) { location.reload(); throw new Error("La sesión se cerró"); }  // vuelve al login
   const datos = await r.json();
   if (!r.ok) throw new Error(datos.error || r.statusText);
   return datos;
@@ -330,6 +502,18 @@ async function cargarEstado() {
     h("span", {}, h("b", {}, suma(["aprobado"])), " en cola"),
     h("span", {}, h("b", {}, `${estado.enviados_hoy}/${estado.max_dia}`), " nuevos hoy"),
     h("span", {}, h("b", {}, suma(["respondió", "interesado", "retomar"])), " respondieron"),
+    estado.wa && estado.wa.acepto_riesgo ? h("span", { title: estado.wa.activo ? "WhatsApp activo" : "WhatsApp pausado" },
+      h("b", {}, `${estado.wa.enviados_hoy}/${estado.wa.tope_hoy}`), " WhatsApp hoy",
+      estado.wa.activo ? "" : " (pausado)") : null,
+    (() => {  // la prueba A/B de la demo en el correo 1
+      const pd = estado.prueba_demo || {}, con = pd.con || {}, sin = pd.sin || {};
+      if (!(con.enviados || sin.enviados)) return null;
+      const tasa = (g) => g.enviados ? Math.round(100 * g.respondieron / g.enviados) + "%" : "–";
+      return h("span", { title: `Prueba: ${pd.meta} correos con la demo y ${pd.meta} sin ella. Respondieron / enviados.` },
+        "Demo ", h("b", {}, tasa(con)), ` (${con.respondieron}/${con.enviados}) · sin demo `, h("b", {}, tasa(sin)), ` (${sin.respondieron}/${sin.enviados})`);
+    })(),
+    estado.crm_hoy ? h("span", { style: "cursor:pointer", onclick: () => { crmFiltro = "hoy"; mostrar("crm"); } },
+      h("b", {}, estado.crm_hoy), " seguimientos para hoy") : null,
   );
 
   let detalleEnvio;
@@ -348,8 +532,17 @@ async function cargarEstado() {
     }, estado.activo ? "Pausar envíos" : "Activar envíos"),
   );
 
+  $("salir").hidden = !estado.servidor;
+  const num = $("num-crm");
+  num.hidden = !estado.crm_hoy;
+  num.textContent = estado.crm_hoy || "";
+  num.title = `${estado.crm_hoy} seguimientos para hoy`;
+
   const banners = [];
   if (estado.error) banners.push(h("div", { class: "banner bad" }, estado.error));
+  if (estado.wa && estado.wa.error) banners.push(h("div", { class: "banner bad" }, "WhatsApp: " + estado.wa.error));
+  if (estado.wa && estado.wa.en_duda)
+    banners.push(h("div", { class: "banner warn" }, `${estado.wa.en_duda} WhatsApp quedaron en duda: confírmalos en la pestaña WhatsApp mirando el celular.`));
   if (!estado.firma || /\{[^}]*\}/.test(estado.firma))
     banners.push(h("div", { class: "banner warn" }, "Falta tu firma: corre python prospector.py iniciar. Hasta entonces no se puede aprobar nada."));
   if (!estado.gmail)
@@ -461,6 +654,8 @@ function pintar() {
       d.nombre ? h("span", {}, "Decisor: ", h("b", {}, d.nombre), d.cargo ? `, ${d.cargo} ` : " ", enlace(d.fuente, "fuente")) : h("span", {}, "Decisor sin identificar"),
     ),
     b.motivo ? h("div", { class: "banner warn", style: "margin:0 0 14px" }, b.motivo) : null,
+    b.prueba_demo === "con" ? h("div", { class: "banner", style: "margin:0 0 14px;background:var(--accent-soft);color:var(--accent)" },
+      "Prueba A/B: este correo 1 sale CON la demo (el envío agrega una línea con tu demo, DEMO_URL, antes del cierre).") : null,
     b.estado === "respondió" ? respuestaBox() : null,
     h("div", { class: "cols" },
       h("div", {},
@@ -487,7 +682,6 @@ function pintar() {
           h("h2", { id: "comprobar-t" }, "Comprueba antes de aprobar"),
           h("p", { class: "nota-chica" }, "Si alguna resulta falsa, el correo diría algo que no es: corrígelo antes de aprobar."),
           ...comprobar) : null,
-        cajaWhatsapp(),
         h("div", { class: "caja" },
           h("h2", {}, "Lo que vimos"),
           b.observacion ? h("div", { class: "obs" }, h("b", {}, "Observación elegida"), b.observacion) : null,
@@ -506,7 +700,6 @@ function pintar() {
   document.querySelectorAll("textarea.cuerpo").forEach(ajustar);
   pintarRevision();
   pintarAcciones();
-  pintarWhatsapp();
   window.scrollTo({ top: 0 });
 }
 
@@ -523,54 +716,10 @@ async function accionAfinar(nota, boton) {
   finally { boton.disabled = false; boton.classList.remove("girando"); }
 }
 
-function cajaWhatsapp() {
-  const w = actual.whatsapp_vista;
-  if (!w || !w.mostrar) return null;
-  const enviado = (w.enviados || []).at(-1);
-  const guardarW = async (campos) => {
-    try { actual = await api(`/api/borradores/${actual.dominio}/whatsapp`, campos); pintarWhatsapp(); }
-    catch (e) { aviso(e.message, true); }
-  };
-  const numero = h("input", { type: "text", value: w.numero, placeholder: "+56 9 1234 5678",
-    onchange: (e) => guardarW({ numero: e.target.value }) });
-  const mensaje = h("textarea", { rows: 3, value: w.mensaje, onchange: (e) => guardarW({ mensaje: e.target.value }) });
-  const abrir = h("button", { class: "btn prim", id: "wa-abrir", disabled: !!w.bloqueo, title: w.bloqueo || "Se abre el chat: tú lo revisas y lo envías",
-    onclick: () => {
-      const v = actual.whatsapp_vista;
-      window.open(`${v.enlace}?text=${encodeURIComponent(mensaje.value)}`, "_blank", "noopener");
-    } }, "Abrir WhatsApp");
-  const marcar = h("button", { class: "btn", id: "wa-enviado", disabled: !!w.bloqueo || !!enviado,
-    onclick: (e) => accion("whatsapp", { accion: "enviado", mensaje: mensaje.value }, e.currentTarget) }, "Ya lo envié");
-  const respondio = h("button", { class: "btn", disabled: !["enviando", "terminado"].includes(actual.estado),
-    title: "Corta los recordatorios por correo",
-    onclick: (e) => accion("whatsapp", { accion: "respondio" }, e.currentTarget) }, "Respondió por WhatsApp");
-  return h("div", { class: "caja", id: "caja-whatsapp" },
-    h("h2", {}, "WhatsApp, a mano"),
-    h("p", { class: "nota-chica", id: "wa-nota" }),
-    h("div", { class: "wa-numero" }, numero, w.fuente ? enlace(w.fuente, "fuente ↗") : null),
-    mensaje,
-    h("div", { class: "wa-botones" }, abrir, marcar, respondio),
-    enviado ? h("p", { class: "nota-chica" }, `Lo marcaste como enviado: ${hora(enviado)}`) : null,
-  );
-}
-
-function pintarWhatsapp() {
-  const w = actual.whatsapp_vista;
-  const nota = $("wa-nota");
-  if (!w || !nota) return;
-  const persona = w.de === "persona" ? " Parece el celular de una persona: escríbele solo si lo publica para consultas." : "";
-  const desconocido = !w.de && w.numero ? " Comprueba de quién es este número antes de escribir." : "";
-  nota.textContent = (w.bloqueo ? w.bloqueo + ". " : "Mejor desde el día siguiente al correo. ") + "Tú lo revisas y lo envías; nada sale solo." + persona + desconocido;
-  const abrir = $("wa-abrir"), marcar = $("wa-enviado");
-  if (abrir) { abrir.disabled = !!w.bloqueo; abrir.title = w.bloqueo || "Se abre el chat: tú lo revisas y lo envías"; }
-  if (marcar) marcar.disabled = !!w.bloqueo || !!(w.enviados || []).length;
-}
-
 function respuestaBox() {
   const opciones = [["si", "Sí, mándalo"], ["info", "Envíame información"], ["ahora_no", "Ahora no (60 días)"], ["baja", "No le interesa / baja"]];
   return h("div", { class: "banner warn", style: "margin:0 0 14px" },
-    h("b", {}, actual.respuesta_canal === "whatsapp" ? "Te respondió por WhatsApp. " : "Te respondió. "),
-    actual.respuesta_canal === "whatsapp" ? "¿Qué dijo? " : "Léelo en Gmail y dime qué dijo: ",
+    h("b", {}, "Te respondió. "), "Léelo en Gmail y dime qué dijo: ",
     ...opciones.map(([tipo, texto]) => h("button", { class: "btn", style: "margin-left:6px", onclick: (e) => accion("respuesta", { tipo }, e.currentTarget) }, texto)));
 }
 
@@ -639,16 +788,264 @@ function pintarAcciones() {
 // --- pestañas ----------------------------------------------------------------
 let vista = "correos";
 
+const VISTAS = ["correos", "radar", "whatsapp", "conversaciones", "crm"];
+const TITULOS = { correos: "Correos", radar: "Prospectos", whatsapp: "WhatsApp", conversaciones: "Conversaciones", crm: "CRM" };
+
 function mostrar(v) {
   vista = v;
+  $("titulo").textContent = TITULOS[v];
   try { localStorage.setItem("prospector-vista", v); } catch {}
   if (location.hash !== "#" + v) history.replaceState(null, "", "#" + v);
-  $("vista-radar").hidden = v !== "radar";
-  $("vista-correos").hidden = v !== "correos";
+  for (const x of VISTAS) {
+    $("vista-" + x).hidden = v !== x;
+    $("tab-" + x).classList.toggle("activo", v === x);
+  }
   $("acciones").hidden = v !== "correos" || !actual;
-  $("tab-correos").classList.toggle("activo", v === "correos");
-  $("tab-radar").classList.toggle("activo", v === "radar");
   if (v === "radar") cargarRadar().catch((e) => aviso("No pude cargar el radar: " + e.message, true));
+  if (v === "whatsapp") vigilarWA();
+  if (v === "crm") cargarCRM().catch((e) => aviso("No pude cargar el CRM: " + e.message, true));
+  if (v === "conversaciones") vigilarConv();
+}
+
+// --- whatsapp ----------------------------------------------------------------
+let wa = null;
+const CONEXION = { apagado: "Apagado", iniciando: "Iniciando…", esperando_qr: "Esperando el QR", conectado: "Conectado",
+  sesion_cerrada: "Sesión cerrada", desconectado: "Se desconectó" };
+
+async function accionWA(cuerpo, boton) {
+  if (boton) { boton.disabled = true; boton.classList.add("girando"); }
+  try { wa = await api("/api/whatsapp", cuerpo); pintarWA(); cargarEstado().catch(() => {}); vigilarWA(); return true; }
+  catch (e) { aviso(e.message, true); return false; }
+  finally { if (boton) { boton.disabled = false; boton.classList.remove("girando"); } }
+}
+
+// En la pestaña, pregunta cada 3 s mientras un número arranca o espera el QR; si no, cada 15 s.
+async function vigilarWA() {
+  clearTimeout(vigilarWA.t);
+  if (vista !== "whatsapp") return;
+  try { wa = await api("/api/whatsapp"); if (!editandoWA()) pintarWA(); } catch (e) { aviso("No pude leer WhatsApp: " + e.message, true); }
+  const moviendose = (wa?.numeros || []).some((n) => ["iniciando", "esperando_qr"].includes(n.conexion));
+  vigilarWA.t = setTimeout(vigilarWA, moviendose ? 3000 : 15000);
+}
+
+// Mientras escribes en un mensaje, el refresco automático no lo pisa.
+function editandoWA() {
+  const a = document.activeElement;
+  return !!a && $("vista-whatsapp").contains(a) && (a.tagName === "TEXTAREA" || (a.tagName === "INPUT" && a.type === "text"));
+}
+const waSel = new Set();
+const ORIGEN = { floja: "floja", "sin correo": "sin correo" };
+
+function pintarWA() {
+  const caja = $("vista-whatsapp");
+  if (!wa) return;
+  const partes = [];
+
+  if (!wa.node || !wa.instalado) {
+    partes.push(h("div", { class: "caja" }, h("h2", {}, "Falta instalar el puente de WhatsApp"),
+      !wa.node ? h("p", {}, "1. Instala Node.js 22.13 o más nuevo desde ", enlace("https://nodejs.org", "nodejs.org"), ".") : null,
+      h("p", {}, (!wa.node ? "2. " : "") + "En una terminal, dentro de la carpeta del proyecto: ", h("code", {}, "cd whatsapp"), " y luego ", h("code", {}, "npm install"), "."),
+      h("p", {}, "Después cierra el panel (Ctrl+C) y vuelve a abrirlo con ", h("code", {}, "python prospector.py panel"), ".")));
+  }
+
+  // El embudo de un vistazo.
+  const embudo = [["Para escribir", wa.total_candidatos, "wa-candidatos"], ["Por aprobar", wa.revisar.length, "wa-revisar"],
+    ["En cola", wa.cola.length, "wa-cola"], ["Esperando respuesta", wa.enviados.length, "wa-enviados"],
+    ["Respondieron", wa.respondieron, null], ["Sin respuesta", wa.sin_respuesta.length, "wa-enviados"]];
+  partes.push(h("div", { class: "kpis", style: "margin-top:0" }, ...embudo.map(([nombre, n, destino]) =>
+    h("button", { class: "kpi", onclick: () => destino ? $(destino)?.scrollIntoView({ behavior: "smooth", block: "start" }) : mostrar("crm") },
+      h("b", {}, n), h("span", {}, nombre)))));
+
+  partes.push(h("div", { class: "caja riesgo" },
+    h("h2", {}, "Antes de conectar un número"),
+    h("p", { style: "margin:0" }, "WhatsApp va por una API ", h("b", {}, "no oficial"), ". Meta puede bloquear el número sin aviso y sin vuelta atrás, sobre todo si escribe en frío."),
+    h("ul", {},
+      h("li", {}, "Usa números que puedas perder: nunca tu personal ni el principal de la agencia."),
+      h("li", {}, `Números nuevos: parten con ${wa.escalones[0]} mensajes al día por número y suben cada semana (${wa.escalones.join(" → ")}). No lo apures.`),
+      h("li", {}, "Antes de prospectar, úsalos unos días como una persona: foto, nombre, algunos chats con conocidos."),
+      h("li", {}, "Cada mensaje lo apruebas tú, uno por uno. Si no responde, no se le insiste."),
+      h("li", {}, "Si te reportan como spam, el baneo llega rápido: mensajes cortos, sin venta y a negocios que publican ese WhatsApp.")),
+    h("label", { class: "check" },
+      h("input", { type: "checkbox", checked: wa.acepto_riesgo, onchange: (e) => accionWA({ accion: "riesgo", valor: e.target.checked }) }),
+      h("span", {}, "Entiendo el riesgo y voy a usar números que puedo perder."))));
+
+  if (wa.acepto_riesgo) {
+    partes.push(h("div", { class: "caja" },
+      h("div", { class: "wa-control" },
+        h("span", { class: "punto" + (wa.activo ? " on" : "") }),
+        h("b", {}, wa.activo ? "Envío activo" : "Envío pausado"),
+        h("small", { style: "color:var(--muted)" }, !wa.activo ? "Nada sale hasta que lo actives." : !wa.en_ventana ? "Fuera de las horas de envío: espera la próxima." : "Sale lo aprobado, uno a la vez."),
+        h("span", { class: "esp" }),
+        h("button", { class: "btn" + (wa.activo ? "" : " prim"), onclick: (e) => accionWA({ accion: wa.activo ? "pausar" : "activar" }, e.currentTarget) },
+          wa.activo ? "Pausar WhatsApp" : "Activar WhatsApp")),
+      h("p", { class: "wa-datos" },
+        h("b", {}, `${wa.enviados_hoy}/${wa.tope_hoy}`), " enviados hoy · sale en las mejores horas: ", wa.ventanas,
+        ` · un saludo cada ${wa.pausa_total} min (entre todos tus números)`,
+        wa.proximo && new Date(wa.proximo) > new Date() ? ` · el próximo desde las ${horaCorta(wa.proximo)}` : ""),
+      wa.reserva ? h("p", { class: "wa-datos" },
+        "Para el envío automático: ", h("b", {}, wa.reserva.verificadas), " negocios verificados por salir",
+        wa.reserva.en_cola ? ` + ${wa.reserva.en_cola} ya en cola` : "", " · alcanza para unos ", h("b", {}, wa.reserva.dias), ` día${wa.reserva.dias === 1 ? "" : "s"} de envío`,
+        wa.reserva.por_verificar ? ` · ${wa.reserva.por_verificar} más esperando que Claude lea su web` : "",
+        wa.reserva.dias <= 3 && !wa.reserva.por_verificar ? h("span", { style: "color:var(--warn)" }, " · quedan pocas: rastrea más comunas en Prospectos") : null) : null,
+      wa.error ? h("div", { class: "banner bad", style: "margin:10px 0 0" }, wa.error) : null));
+    partes.push(h("div", { class: "wa-numeros" }, ...wa.numeros.map(tarjetaNumero)));
+  }
+
+  // El audio del pitch: se graba una vez y se manda con un clic.
+  const au = wa.audio || {};
+  const subir = h("input", { type: "file", accept: ".ogg,.opus,audio/ogg", style: "max-width:100%", onchange: async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const b64 = await new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = mal; r.readAsDataURL(f); });
+    try { await api("/api/audio", { base64: b64 }); aviso("Audio guardado."); vigilarWA(); }
+    catch (err) { aviso(err.message, true); }
+  } });
+  partes.push(h("div", { class: "caja", style: "margin-top:14px" },
+    h("h2", {}, "Audio del pitch"),
+    h("p", { class: "nota-chica" }, "Grábalo una vez en WhatsApp (mándatelo a ti mismo), descárgalo y súbelo aquí. A cada prospecto que le toque audio se lo mandas con un clic desde Conversaciones o el CRM: le llega como nota de voz, no como archivo."),
+    au.existe ? h("audio", { controls: true, src: "/audio/pitch.ogg?v=" + encodeURIComponent(au.fecha || ""), style: "width:100%;margin:6px 0" }) : null,
+    au.existe ? h("small", { style: "color:var(--muted)" }, `Subido ${hora(au.fecha)} · ${Math.round(au.bytes / 1024)} KB`) : null,
+    h("div", { class: "wa-botones" }, subir,
+      au.existe ? h("button", { class: "btn", disabled: !au.prueba, title: au.prueba ? "Te lo manda a tu número de prueba (WA_PRUEBA)" : "Configura WA_PRUEBA en tus variables de entorno",
+        onclick: async (e) => { const b = e.currentTarget; b.disabled = true; b.classList.add("girando");
+          try { await api("/api/audio/prueba", {}); aviso("Listo: revisa tu WhatsApp."); } catch (err) { aviso(err.message, true); }
+          finally { b.disabled = false; b.classList.remove("girando"); } } }, "Enviarme una prueba") : null)));
+
+  // Fase 1: por aprobar, uno por uno.
+  partes.push(h("div", { class: "caja", id: "wa-revisar", style: "margin-top:14px" },
+    h("h2", {}, `Por aprobar · ${wa.revisar.length}`),
+    wa.auto_aprobar ? h("p", { class: "nota-chica" }, "Automático: los saludos a negocios verificados de tu rubro se aprueban y salen solos, hasta el tope de cada día. Aquí queda lo que no pasó el filtro o todavía no se revisa: eso no sale solo. Si alguno sí es una inmobiliaria, apruébalo tú; si no, descártalo.")
+      : wa.revisar.length && wa.auto_preparar ? h("p", { class: "nota-chica" }, "Los preparó el sistema para hoy, del mejor prospecto al peor. Mira a quién va cada uno: aprueba los que sí y descarta los que no (se repone otro solo).") : null,
+    wa.revisar.length ? h("p", { class: "nota-chica" }, `Fase 1: 3 líneas, sin venta. Que entre en la vista previa (~${wa.largo_ideal} caracteres). Si sabes el nombre de quien contesta, ponlo: el mensaje pasa a la variación con nombre.`) : null,
+    ...(wa.revisar.length ? wa.revisar.map(tarjetaRevisar)
+      : [h("p", { class: "vacio", style: "padding:8px 0" }, wa.auto_preparar ? "Nada por aprobar. Cada día se llena solo con los saludos que caben en el tope."
+          : "Nada por aprobar. Elige abajo a quién escribirle y aprieta «Preparar mensajes».")])));
+
+  const filaWA = (p, ...extra) => h("li", {},
+    h("span", {}, h("b", {}, p.nombre), " · ", p.numero, p.desde ? ` · desde el número ${p.desde}` : "", p.enviado ? ` · ${hora(p.enviado)}` : "",
+      p.aprobado_por && !p.enviado ? h("small", { style: "color:var(--muted)" }, " · aprobado solo") : null),
+    h("span", { class: "m" }, p.respuesta ? `Respondió: «${p.respuesta}»` : p.recibido ? `Llegó algo automático: «${p.recibido}»` : p.error || p.mensaje.replace(/\n/g, " · ")),
+    extra.length ? h("span", { class: "wa-botones", style: "margin:0;grid-column:2;grid-row:1 / span 2;align-self:center" }, ...extra) : null);
+  const btn = (texto, cuerpo, clase = "btn") => h("button", { class: clase, onclick: (e) => accionWA(cuerpo, e.currentTarget) }, texto);
+
+  if (wa.dudas.length) partes.push(h("div", { class: "caja", style: "margin-top:14px;border-left:3px solid var(--warn)" },
+    h("h2", {}, `En duda o con error · ${wa.dudas.length}`),
+    h("p", { class: "nota-chica" }, "No sé si salieron. Mira el chat en el celular de ese número antes de decidir: nunca se reintenta solo."),
+    h("ul", { class: "cola-wa" }, ...wa.dudas.map((p) => filaWA(p,
+      p.wa_estado === "incierto" ? btn("Sí salió", { accion: "salio", dominio: p.dominio }) : null,
+      btn("No salió: a la cola", { accion: "reintentar", dominio: p.dominio }))))));
+
+  partes.push(h("div", { class: "caja", id: "wa-cola", style: "margin-top:14px" },
+    h("h2", {}, `En cola · ${wa.cola.length}`),
+    wa.cola.length ? h("ul", { class: "cola-wa" }, ...wa.cola.map((p) => filaWA(p,
+      p.wa_estado === "en cola" ? btn("Quitar", { accion: "quitar", dominio: p.dominio }) : h("small", {}, "saliendo…"))))
+      : h("p", { class: "vacio", style: "padding:8px 0" }, "Vacía.")));
+
+  partes.push(h("div", { class: "caja", id: "wa-enviados", style: "margin-top:14px" },
+    h("h2", {}, `Esperando respuesta · ${wa.enviados.length}`),
+    h("p", { class: "nota-chica" }, `Cuando alguien contesta pasa solo al CRM, con la fase 2 lista. Si a los ${wa.sin_respuesta_dias} días no contestó, queda «sin respuesta» y no se le insiste.`),
+    wa.enviados.length ? h("ul", { class: "cola-wa" }, ...wa.enviados.map((p) => filaWA(p,
+      h("button", { class: "btn", title: "Si contestó y el panel no lo vio (un audio, otro número…)",
+        onclick: (e) => accionWA({ accion: "respondio", dominio: p.dominio }, e.currentTarget).then(() => aviso("Listo: está en el CRM.")) }, "Respondió"))))
+      : h("p", { class: "vacio", style: "padding:8px 0" }, "Nadie esperando."),
+    wa.sin_respuesta.length ? h("details", { style: "margin-top:8px" }, h("summary", {}, `Sin respuesta · ${wa.sin_respuesta.length}`),
+      h("ul", { class: "cola-wa" }, ...wa.sin_respuesta.map((p) => filaWA(p,
+        h("button", { class: "btn", onclick: (e) => accionWA({ accion: "respondio", dominio: p.dominio }, e.currentTarget) }, "Respondió"))))) : null));
+
+  // A quién escribirle.
+  const cands = wa.candidatos || [];
+  for (const c of [...waSel]) if (!cands.some((x) => x.clave === c)) waSel.delete(c);
+  const contar = h("b", {}, waSel.size);
+  const preparar = h("button", { class: "btn prim", disabled: !waSel.size, onclick: async (e) => {
+    const claves = [...waSel];
+    if (await accionWA({ accion: "preparar", claves }, e.currentTarget) !== false) {
+      waSel.clear(); aviso(`Listo: ${claves.length} mensajes por aprobar arriba. No salió nada todavía.`);
+      $("wa-revisar")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  } }, "Preparar mensajes");
+  const actualizar = () => { contar.textContent = waSel.size; preparar.disabled = !waSel.size; };
+  partes.push(h("div", { class: "caja", id: "wa-candidatos", style: "margin-top:14px" },
+    h("h2", {}, `Para escribir por WhatsApp · ${wa.total_candidatos}`),
+    h("p", { class: "nota-chica" }, "Las que publican un WhatsApp y no van por correo (sin correo o flojas en Prospectos). Mira el motivo antes de elegir: si no es de tu rubro o no tiene equipo, sáltalo."),
+    h("div", { class: "wa-botones", style: "margin:0 0 8px" },
+      h("button", { class: "btn", onclick: () => { cands.slice(0, 10).forEach((c) => waSel.add(c.clave)); pintarWA(); } }, "Marcar las 10 primeras"),
+      h("button", { class: "btn", onclick: () => { waSel.clear(); pintarWA(); } }, "Ninguna"),
+      h("span", { style: "align-self:center;color:var(--muted)" }, contar, " elegidas"), h("span", { style: "flex:1" }), preparar),
+    cands.length ? h("ul", { class: "cola-wa" }, ...cands.map((c) => h("li", { style: "grid-template-columns:auto minmax(0,1fr)" },
+      h("input", { type: "checkbox", checked: waSel.has(c.clave), style: "grid-row:1 / span 2;margin-top:4px;accent-color:var(--accent)",
+        onchange: (e) => { e.target.checked ? waSel.add(c.clave) : waSel.delete(c.clave); actualizar(); } }),
+      h("span", {}, h("b", {}, c.nombre), " · ", c.comuna, " · ", c.numero, " ",
+        h("span", { class: "chip " + (c.origen === "floja" ? "floja" : "sin-correo") }, ORIGEN[c.origen] || c.origen),
+        c.resenas ? h("small", { style: "color:var(--muted)" }, ` · ${c.resenas} reseñas`) : null, " ", enlace(c.web, "web ↗")),
+      h("span", { class: "m", style: "grid-column:2" }, c.motivo || ""))))
+      : h("p", { class: "vacio", style: "padding:8px 0" }, "No quedan. Rastrea otra comuna en Prospectos.")));
+
+  llenar(caja, ...partes);
+}
+
+function tarjetaRevisar(p) {
+  const largo = h("small", {});
+  const contarLargo = (n) => { largo.textContent = `${n} caracteres`; largo.style.color = n > wa.largo_ideal ? "var(--warn)" : "var(--muted)"; };
+  contarLargo(p.largo);
+  const msg = h("textarea", { rows: 3, value: p.mensaje, oninput: (e) => contarLargo(e.target.value.length),
+    onchange: (e) => accionWA({ accion: "editar", dominio: p.dominio, mensaje: e.target.value }) });
+  const num = h("input", { type: "text", value: p.numero, style: "width:170px",
+    onchange: (e) => accionWA({ accion: "editar", dominio: p.dominio, numero: e.target.value }) });
+  const contacto = h("input", { type: "text", value: p.contacto, placeholder: "Nombre de quien contesta (opcional)", style: "width:240px",
+    onchange: (e) => accionWA({ accion: "editar", dominio: p.dominio, contacto: e.target.value }) });
+  return h("div", { class: "revisar-wa" },
+    h("div", {}, h("b", {}, p.nombre), " ", p.comuna ? h("span", { class: "chip" }, p.comuna) : null, " ",
+      h("span", { class: "chip " + (p.origen === "floja" ? "floja" : "sin-correo") }, ORIGEN[p.origen] || p.origen), " ",
+      enlace(p.web, "web ↗"), " ", p.enlace ? enlace(p.enlace, "ver chat ↗") : null),
+    p.motivo ? h("p", { class: "nota-chica", style: "margin:4px 0" }, "En Prospectos: " + p.motivo) : null,
+    p.verificacion ? h("p", { class: "nota-chica", style: "margin:4px 0;color:var(--warn)" }, p.verificacion + ". Por eso no salió solo.") : null,
+    h("div", { class: "wa-numero", style: "margin:8px 0" }, num, contacto),
+    msg,
+    h("div", { class: "wa-botones" },
+      h("button", { class: "btn prim", disabled: p.problemas.length > 0, title: p.problemas.join("\n"),
+        onclick: (e) => accionWA({ accion: "aprobar", dominio: p.dominio, mensaje: msg.value, numero: num.value, contacto: contacto.value }, e.currentTarget) }, "Aprobar → cola"),
+      h("button", { class: "btn malo", onclick: (e) => {
+        const motivo = prompt("¿Por qué no le escribes? (opcional)");
+        if (motivo !== null) accionWA({ accion: "descartar", dominio: p.dominio, motivo }, e.currentTarget);
+      } }, "Descartar"),
+      h("span", { style: "flex:1" }), largo),
+    p.problemas.length ? h("p", { class: "nota-chica", style: "color:var(--bad);margin-top:6px" }, p.problemas.join(" · ")) : null);
+}
+
+function tarjetaNumero(n) {
+  const corre = !["apagado"].includes(n.conexion);
+  const botones = [];
+  if (["apagado", "desconectado", "sesion_cerrada"].includes(n.conexion))
+    botones.push(h("button", { class: "btn prim", disabled: !wa.instalado, onclick: (e) => accionWA({ accion: "conectar", numero: n.numero }, e.currentTarget) },
+      n.vinculado ? "Reconectar" : "Conectar"));
+  if (corre) botones.push(h("button", { class: "btn", onclick: (e) => accionWA({ accion: "detener", numero: n.numero }, e.currentTarget) }, "Apagar"));
+  if (n.vinculado) botones.push(h("button", { class: "btn malo", onclick: (e) => {
+    if (confirm(`¿Desvincular el número ${n.numero}? Se borra la sesión y tendrás que escanear el QR otra vez.`))
+      accionWA({ accion: "desvincular", numero: n.numero }, e.currentTarget);
+  } }, "Desvincular"));
+
+  let ayuda = null;
+  if (n.conexion === "esperando_qr") ayuda = h("p", { class: "nota-chica" }, "En el celular de este número: WhatsApp → Dispositivos vinculados → Vincular un dispositivo, y escanea.");
+  else if (n.conexion === "iniciando") ayuda = h("p", { class: "nota-chica" }, "Arrancando. El QR aparece en unos segundos.");
+  else if (n.conexion === "sesion_cerrada") ayuda = h("p", { class: "nota-chica", style: "color:var(--bad)" },
+    "Se cerró la sesión. O lo desvinculaste desde el celular, o WhatsApp bloqueó el número: abre WhatsApp en ese celular para saber cuál. Si está bloqueado, no lo reconectes.");
+  else if (n.conexion === "desconectado") ayuda = h("p", { class: "nota-chica" }, "Perdió la conexión. Toca Reconectar; si pide QR otra vez, el celular cerró la sesión.");
+  else if (n.conexion === "apagado" && !n.vinculado) ayuda = h("p", { class: "nota-chica" }, "Toca Conectar y escanea el QR con el celular de este número.");
+
+  const pct = n.tope ? Math.min(100, Math.round(100 * n.hoy / n.tope)) : 0;
+  const pausa = n.proximo && new Date(n.proximo) > new Date() ? ` · próximo desde las ${horaCorta(n.proximo)}` : "";
+  return h("div", { class: "caja" },
+    h("h3", {}, `Número ${n.numero}`, h("span", { class: "chip " + n.conexion }, CONEXION[n.conexion] || n.conexion)),
+    h("div", { class: "barra" }, h("span", { style: `width:${pct}%` })),
+    h("small", { style: "color:var(--muted)" }, `${n.hoy} de ${n.tope} hoy · ${n.regla || `semana ${n.semana} de calentamiento`}${pausa}`),
+    h("label", { class: "check", title: "Si es el número de tu negocio, apágalo: así no arriesgas que lo bloqueen" },
+      h("input", { type: "checkbox", checked: n.prospectar !== false, onchange: (e) => accionWA({ accion: "prospectar", numero: n.numero, valor: e.target.checked }) }),
+      h("span", {}, "Mandar mensajes en frío desde este número")),
+    n.prospectar === false ? h("p", { class: "nota-chica" }, "Solo para conversar: desde aquí no sale ningún mensaje de conexión.") : null,
+    n.qr ? h("img", { class: "wa-qr", src: n.qr, alt: `QR para vincular el número ${n.numero}` }) : null,
+    ayuda,
+    n.error && n.conexion !== "conectado" ? h("p", { class: "nota-chica" }, "Último error: " + n.error) : null,
+    h("div", { class: "wa-botones" }, ...botones));
 }
 
 // --- radar -------------------------------------------------------------------
@@ -814,6 +1211,8 @@ function pintarFicha() {
 
 function accionFicha(d) {
   const caja = (...hijos) => h("div", { class: "accion" }, ...hijos);
+  if (/^WhatsApp/.test(d.borrador || "")) return caja(h("button", { class: "btn prim", onclick: () => mostrar("whatsapp") }, "Va por WhatsApp: ver la pestaña →"),
+    h("small", {}, d.borrador));
   if (d.borrador) return caja(h("button", { class: "btn prim", onclick: () => irABorrador(d.clave) }, "Ver su borrador en Correos →"),
     d.observacion && d.borrador !== "descartada" ? h("small", {}, "Observación elegida: " + d.observacion) : null);
   if (d.investigando) return caja(h("button", { class: "btn girando", disabled: true }, "Investigando"),
@@ -883,21 +1282,567 @@ async function vigilar() {
   vigilar.t = setTimeout(vigilar, ocupado(t) ? 4000 : 20000);
 }
 
+// --- conversaciones ----------------------------------------------------------
+// Solo los chats con prospectos: el panel nunca pide las otras conversaciones de tus números.
+let convFilas = [], convSel = null;
+const borradoresConv = {};
+const TIPO_MEDIA = { audioMessage: "🎤 Audio", imageMessage: "📷 Foto", videoMessage: "🎬 Video", documentMessage: "📄 Documento", stickerMessage: "Sticker" };
+const cuando = (s) => {
+  const d = new Date(s * 1000), hoy = new Date();
+  return d.toDateString() === hoy.toDateString() ? d.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })
+    : d.toLocaleDateString("es-CL", { day: "numeric", month: "short" });
+};
+
+async function vigilarConv() {
+  clearTimeout(vigilarConv.t);
+  try { await cargarConversaciones(); } catch (e) { if (vista === "conversaciones") aviso("No pude leer las conversaciones: " + e.message, true); }
+  vigilarConv.t = setTimeout(vigilarConv, vista === "conversaciones" ? 10000 : 60000);
+}
+
+async function cargarConversaciones() {
+  convFilas = await api("/api/conversaciones");
+  const nuevos = convFilas.filter((f) => f.nuevos && (!convSel || convSel.dominio !== f.dominio)).length;
+  const num = $("num-conv"); num.hidden = !nuevos; num.textContent = nuevos || ""; num.title = `${nuevos} chats con mensajes nuevos`;
+  if (vista !== "conversaciones") return;
+  pintarConvLista();
+  if (convSel) await abrirConv(convSel.dominio, false);
+}
+
+// El interruptor general: pausa todo lo que sale solo (saludos aprobados y seguimientos).
+function controlConv() {
+  const act = !!(estado.wa && estado.wa.activo);
+  return h("div", { class: "conv-global" },
+    h("span", { class: "punto" + (act ? " on" : "") }),
+    h("small", {}, act ? ((estado.wa || {}).auto_responder ? "Automático activo: salen los saludos, el agente contesta solo y salen los seguimientos del Loom. ⚠ = te toca a ti." : "Automático activo: salen los saludos aprobados y los seguimientos del Loom.")
+      : "Automático en pausa: no sale nada solo. Tú puedes seguir escribiendo."),
+    h("button", { class: "btn" + (act ? "" : " prim"), onclick: async (e) => {
+      const b = e.currentTarget; b.disabled = true;
+      try {
+        await api("/api/whatsapp", { accion: act ? "pausar" : "activar" });
+        await cargarEstado(); pintarConvLista(); pintarBot();
+        aviso(act ? "En pausa: no sale nada solo hasta que lo reanudes." : "Activo otra vez.");
+      } catch (err) { aviso(err.message, true); b.disabled = false; }
+    } }, act ? "Pausar todo" : "Reanudar"));
+}
+
+// El interruptor de este chat.
+function pintarBot() {
+  const caja = $("conv-bot");
+  if (!caja || !convSel) return;
+  const d = convSel, bot = d.bot || {}, act = !!(estado.wa && estado.wa.activo);
+  const n = bot.pendientes || 0, seg = `${n} seguimiento${n === 1 ? "" : "s"} del Loom`;
+  const ag = d.agente || {};
+  let texto;
+  if (ag.activo && !bot.apagado && act) {
+    texto = ag.escalado && ag.escalado.motivo
+      ? `⚠ El agente te dejó este chat a ti: ${ag.escalado.motivo}. Contéstale tú; cuando escriba de nuevo, el agente vuelve a atender.`
+      : `Agente activo: contesta solo, con tu tono${ag.enviados_hoy ? ` (hoy lleva ${ag.enviados_hoy})` : ""}. Tú solo pegas el Loom en el CRM.` + (n ? ` · ${seg} programado${n === 1 ? "" : "s"}.` : "");
+  } else if (bot.apagado) texto = "Automático apagado en este chat: no le sale nada solo. Solo escribes tú." + (n ? ` Quedan ${seg} detenido${n === 1 ? "" : "s"}.` : "");
+  else if (!act) texto = "Todo lo automático está en pausa." + (n ? ` Hay ${seg} esperando.` : "");
+  else if (n) texto = `Automático: ${seg} programado${n === 1 ? "" : "s"}. El próximo sale ${hora(bot.proximo)}, solo si no responde.`;
+  else texto = "Automático encendido: ahora no hay nada programado para este chat.";
+  llenar(caja, h("span", { class: "punto" + (!bot.apagado && act ? " on" : "") }), h("small", {}, texto),
+    h("button", { class: "btn" + (bot.apagado ? " prim" : ""), onclick: async (e) => {
+      const b = e.currentTarget; b.disabled = true;
+      try {
+        const r = await api("/api/conversaciones/" + encodeURIComponent(d.dominio) + "/bot", { apagado: !bot.apagado });
+        if (r.dominio) convSel = r; else convSel.bot = { ...bot, apagado: !bot.apagado };
+        pintarBot();
+        aviso(bot.apagado ? "Encendido en este chat." : "Apagado: a este cliente no le sale nada solo.");
+      } catch (err) { aviso(err.message, true); b.disabled = false; }
+    } }, bot.apagado ? "Encender en este chat" : "Apagar en este chat"));
+}
+
+// Filtro de la lista: todos, solo los interesados (aceptaron el video o más) o los que te tocan a ti.
+const CONV_FILTROS = [["todos", "Todos", () => true], ["interesados", "★ Interesados", (f) => f.interesado],
+  ["tuyos", "⚠ Te tocan", (f) => f.escalado]];
+let convFiltro = "todos";
+
+// Tus etiquetas: cada una con su color fijo (sale del texto) y su propio filtro.
+const ETQ_SUGERIDAS = ["Caliente", "Llamar", "Seguimiento", "Referido", "No le interesa"];
+const etqHue = (t) => [...t.toLowerCase()].reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 360, 7);
+const etq = (t, quitar) => h("span", { class: "etq", style: `--h:${etqHue(t)}` }, t,
+  quitar ? h("button", { title: "Quitar etiqueta", onclick: quitar }, "×") : null);
+const etiquetasEnUso = () => [...new Map(convFilas.flatMap((f) => f.etiquetas || []).map((t) => [t.toLowerCase(), t])).values()]
+  .sort((a, b) => a.localeCompare(b, "es"));
+
+function filtrosConvTodos() {
+  return [...CONV_FILTROS, ...etiquetasEnUso().map((t) => ["etq:" + t.toLowerCase(), t,
+    (f) => (f.etiquetas || []).some((x) => x.toLowerCase() === t.toLowerCase())])];
+}
+
+function filtrosConv() {
+  return h("div", { class: "filtros", style: "margin:8px 4px 4px" }, ...filtrosConvTodos()
+    .filter(([id, , fn]) => id === "todos" || convFilas.some(fn))
+    .map(([id, nombre, fn]) => h("button", { class: "filtro" + (convFiltro === id ? " activo" : ""),
+      onclick: () => { convFiltro = id; pintarConvLista(); } },
+      id.startsWith("etq:") ? h("span", { class: "etq", style: `--h:${etqHue(nombre)};margin-right:4px` }, nombre) : nombre + " ",
+      convFilas.filter(fn).length)));
+}
+
+async function guardarEtiquetas(lista) {
+  const d = convSel;
+  try {
+    const r = await api("/api/conversaciones/" + encodeURIComponent(d.dominio) + "/etiquetas", { etiquetas: lista });
+    d.etiquetas = r.etiquetas;
+    const f = convFilas.find((x) => x.dominio === d.dominio); if (f) f.etiquetas = r.etiquetas;
+    if (convSel === d) pintarEtiquetas();
+    pintarConvLista();
+  } catch (err) { aviso(err.message, true); }
+}
+
+function pintarEtiquetas() {
+  const caja = $("conv-etiquetas");
+  if (!caja || !convSel) return;
+  const actuales = convSel.etiquetas || [];
+  const ya = new Set(actuales.map((t) => t.toLowerCase()));
+  const opciones = [...new Map([...etiquetasEnUso(), ...ETQ_SUGERIDAS].map((t) => [t.toLowerCase(), t])).values()]
+    .filter((t) => !ya.has(t.toLowerCase()));
+  // change salta con Enter, al elegir una sugerencia o al salir de la caja.
+  const input = h("input", { list: "etq-opciones", placeholder: "+ Etiqueta", maxLength: 24, onchange: (e) => {
+    const t = e.target.value.trim();
+    if (t) guardarEtiquetas([...actuales, t]);
+  } });
+  llenar(caja, ...actuales.map((t) => etq(t, () => guardarEtiquetas(actuales.filter((x) => x !== t)))),
+    actuales.length < 8 ? input : null,
+    h("datalist", { id: "etq-opciones" }, ...opciones.map((t) => h("option", { value: t }))));
+}
+
+function pintarConvLista() {
+  const todos = filtrosConvTodos();
+  const fn = (todos.find(([id]) => id === convFiltro) || CONV_FILTROS[0])[2];
+  const filas = convFilas.filter(fn);
+  llenar($("conv-lista"), controlConv(), convFilas.length ? filtrosConv() : null, ...(filas.length ? filas.map((f) => h("button", {
+      class: "conv-item" + (f.interesado ? " interesado" : "") + (convSel && convSel.dominio === f.dominio ? " activo" : ""), onclick: () => abrirConv(f.dominio) },
+    h("span", { class: "n" }, (f.interesado ? "★ " : "") + (f.escalado ? "⚠ " : "") + f.nombre), h("span", { class: "h" }, cuando(f.hora)),
+    h("span", { class: "m" }, (f.ultimo_yo ? "Tú: " : "") + (f.ultimo || "—")),
+    f.nuevos && !(convSel && convSel.dominio === f.dominio) ? h("span", { class: "nuevo" }, f.nuevos)
+      : h("span", { class: "h" }, f.etapa || `N.º ${f.desde}`),
+    (f.etiquetas || []).length ? h("span", { class: "etqs" }, ...f.etiquetas.map((t) => etq(t))) : null))
+    : [h("p", { class: "vacio" }, convFilas.length ? "Ningún chat en este filtro."
+      : "Todavía no hay chats. Aparecen aquí cuando sale el primer mensaje a un prospecto. Solo se ven los chats de prospección: el resto de tus conversaciones no se leen.")]));
+}
+
+async function abrirConv(dominio, nuevo = true) {
+  let d;
+  const cambio = !convSel || convSel.dominio !== dominio;
+  if (cambio) {
+    // Se muestra al tiro con lo que ya está en la lista; los mensajes llegan enseguida.
+    const f = convFilas.find((x) => x.dominio === dominio) || {};
+    convSel = { dominio, nombre: f.nombre || "", numero: f.numero || "", desde: f.desde, contacto: f.contacto || "",
+      mensajes: null, cargando: true, bot: {}, agente: {}, metodo: [], conectado: true, etiquetas: f.etiquetas || [] };
+    pintarChat(); pintarConvLista();
+  }
+  abrirConv.pedido = dominio;
+  try { d = await api("/api/conversaciones/" + encodeURIComponent(dominio)); }
+  catch (e) { return aviso(e.message, true); }
+  if (abrirConv.pedido !== dominio) return;  // ya elegiste otro chat mientras cargaba
+  convSel = d;
+  const f = convFilas.find((x) => x.dominio === dominio); if (f) f.nuevos = 0;
+  if (cambio || nuevo || d.cargando === undefined) pintarChat(); else pintarBurbujas();
+  pintarConvLista();
+}
+
+function pintarBurbujas() {
+  const caja = $("conv-burbujas");
+  if (!caja || !convSel) return;
+  pintarBot();
+  const abajo = caja.scrollHeight - caja.scrollTop - caja.clientHeight < 60;
+  const items = [];
+  let dia = "";
+  for (const m of convSel.mensajes || []) {
+    const fecha = new Date(m.hora * 1000).toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" });
+    if (fecha !== dia) { dia = fecha; items.push(h("div", { class: "dia-sep" }, fecha)); }
+    const media = !m.texto;
+    items.push(h("div", { class: "burbuja " + (m.yo ? "yo" : "ellos") + (media ? " media" : "") },
+      m.texto || TIPO_MEDIA[m.tipo] || "(mensaje sin texto)",
+      h("small", {}, new Date(m.hora * 1000).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }))));
+  }
+  if (convSel.cargando) items.push(h("p", { class: "vacio" }, "Cargando el chat…"));
+  else if (convSel.sin_puente) items.push(h("p", { class: "vacio" }, `El número ${convSel.desde} no está conectado: conéctalo en la pestaña WhatsApp para ver el chat.`));
+  else if (!items.length) items.push(h("p", { class: "vacio" }, "Sin mensajes guardados todavía."));
+  llenar(caja, ...items);
+  if (abajo || pintarBurbujas.primera) { caja.scrollTop = caja.scrollHeight; pintarBurbujas.primera = false; }
+}
+
+function pintarChat() {
+  const d = convSel, caja = $("conv-chat");
+  caja.classList.remove("vacia");
+  const area = h("textarea", { rows: 2, value: borradoresConv[d.dominio] || "", placeholder: "Escribe tu respuesta… (Ctrl+Enter envía)",
+    oninput: (e) => { borradoresConv[d.dominio] = e.target.value; },
+    onkeydown: (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); enviarBtn.click(); } } });
+  let paso = "libre";
+  const plantillas = (d.metodo || []).filter((m) => m.enviable);
+  const elegir = plantillas.length ? h("select", { onchange: (e) => {
+      const m = plantillas[e.target.selectedIndex - 1];
+      if (m) { area.value = m.texto; paso = m.clave; borradoresConv[d.dominio] = m.texto; area.focus(); }
+      e.target.selectedIndex = 0;
+    } }, h("option", {}, "Usar el texto del método…"), ...plantillas.map((m) => h("option", {}, m.titulo))) : null;
+  const bloqueo = d.no_enviar || (!d.conectado ? `El número ${d.desde} no está conectado` : "");
+  const enviarBtn = h("button", { class: "btn prim", disabled: !!bloqueo, title: bloqueo, onclick: async (e) => {
+    const texto = area.value.trim();
+    if (!texto) return;
+    const falta = texto.match(/\{\w+\}/g);
+    if (falta) return aviso("Rellena antes: " + falta.join(", "), true);
+    const b = e.currentTarget; b.disabled = true; b.classList.add("girando");
+    // Si el cliente acaba de escribir, el servidor espera un poco antes de mandarlo.
+    const ultimo = Math.max(0, ...(convSel.mensajes || []).filter((x) => !x.yo).map((x) => x.hora));
+    const segundos = Math.ceil(((estado.wa || {}).espera || 0) - (Date.now() / 1000 - ultimo));
+    if (ultimo && segundos > 1) aviso(`Sale en unos ${segundos} segundos: espero por si escribe algo más.`);
+    try {
+      convSel = await api("/api/conversaciones/" + encodeURIComponent(d.dominio), { texto, paso });
+      area.value = ""; borradoresConv[d.dominio] = ""; paso = "libre";
+      pintarBurbujas.primera = true; pintarBurbujas();
+      if (convSel.aviso) aviso(convSel.aviso, true);
+      cargarEstado().catch(() => {});
+    } catch (err) { aviso(err.message, true); cargarConversaciones().catch(() => {}); }  // tu texto queda en la caja
+    finally { b.disabled = false; b.classList.remove("girando"); }
+  } }, "Enviar");
+
+  llenar(caja,
+    h("div", { class: "conv-cab" },
+      h("button", { class: "btn cerrar", style: "margin:0", onclick: () => { convSel = null; caja.classList.add("vacia"); llenar(caja, h("p", { class: "vacio" }, "Elige una conversación.")); pintarConvLista(); } }, "←"),
+      h("span", {}, h("b", {}, d.nombre), d.contacto ? ` · ${d.contacto}` : ""),
+      h("small", {}, `${d.numero} · desde tu número ${d.desde}`),
+      h("span", { style: "flex:1" }),
+      enlace(d.web, "web ↗"),
+      d.en_crm ? h("button", { class: "btn", onclick: async () => { mostrar("crm"); await abrirCRM(d.dominio); } }, "Ver en el CRM") : null),
+    h("div", { class: "conv-etiquetas", id: "conv-etiquetas" }),
+    h("div", { class: "conv-bot", id: "conv-bot" }),
+    h("div", { class: "burbujas", id: "conv-burbujas" }),
+    h("div", { class: "conv-escribir" },
+      bloqueo ? h("p", { class: "nota-chica", style: "margin:0;color:var(--warn)" }, bloqueo + ".") : null,
+      h("div", { class: "wa-botones", style: "margin:0" }, elegir,
+        h("button", { class: "btn", disabled: !estado.claude, title: estado.claude ? "Claude redacta la respuesta con tu tono. No se envía: la revisas tú." : "No encuentro el comando claude",
+          onclick: async (e) => {
+            const b = e.currentTarget; b.disabled = true; b.classList.add("girando");
+            aviso("Claude está redactando la respuesta…");
+            try {
+              const r = await api("/api/conversaciones/" + encodeURIComponent(d.dominio) + "/sugerir", {});
+              area.value = r.texto; borradoresConv[d.dominio] = r.texto; paso = "libre"; area.focus();
+              aviso("Lista. Revísala, cámbiale lo que quieras y envíala.");
+            } catch (err) { aviso(err.message, true); }
+            finally { b.disabled = false; b.classList.remove("girando"); }
+          } }, "✨ Sugerir respuesta")),
+      h("div", { class: "fila-e" }, area, enviarBtn),
+      d.en_crm && !bloqueo ? h("button", { class: "btn", style: "align-self:flex-start", onclick: async (e) => {
+        if (!confirm(`¿Enviarle a ${d.nombre} el audio del pitch?`)) return;
+        const b = e.currentTarget; b.disabled = true; b.classList.add("girando");
+        try {
+          convSel = await api("/api/conversaciones/" + encodeURIComponent(d.dominio) + "/audio", {});
+          pintarBurbujas.primera = true; pintarBurbujas();
+          convSel.aviso ? aviso(convSel.aviso, true) : aviso("Audio enviado.");
+        } catch (err) { aviso(err.message, true); }
+        finally { b.disabled = false; b.classList.remove("girando"); }
+      } }, "🎤 Enviar el audio del pitch") : null,
+      h("p", { class: "nota-chica", style: "margin:0" }, `Sale con tu clic, desde el mismo número con que le escribiste. Si el cliente acaba de escribir, espera ${(estado.wa || {}).espera || 30} segundos por si manda algo más; si lo manda, no sale y te aviso.`)));
+  pintarEtiquetas();
+  pintarBurbujas.primera = true;
+  pintarBurbujas();
+}
+
+// --- crm ---------------------------------------------------------------------
+let crmD = { filas: [], etapas: [], tipos: {} }, crmFiltro = "hoy", crmSel = null;
+const CERRADAS = ["cliente", "perdido"];
+const nombreEtapa = (clave) => (crmD.etapas.find((e) => e.clave === clave) || {}).nombre || clave;
+const fechaCorta = (iso) => iso ? new Date(iso + (iso.length === 10 ? "T12:00:00" : "")).toLocaleDateString("es-CL", { day: "numeric", month: "short" }) : "";
+const CRM_FILTROS = () => [
+  ["hoy", "Para hoy", (f) => ["atrasado", "hoy"].includes(f.vence) && !CERRADAS.includes(f.etapa)],
+  ["activos", "En curso", (f) => !CERRADAS.includes(f.etapa) && f.etapa !== "pausa"],
+  ...crmD.etapas.map((e) => [e.clave, e.nombre, (f) => f.etapa === e.clave]),
+  ["todos", "Todos", () => true],
+];
+
+async function cargarCRM() {
+  const primera = !crmD.etapas.length;
+  crmD = await api("/api/crm");
+  // Al entrar: lo de hoy si hay algo; si no, todo lo que está en curso.
+  if (primera && crmFiltro === "hoy" && !crmD.filas.some(CRM_FILTROS()[0][2])) crmFiltro = "activos";
+  pintarCRM();
+  if (crmSel) await abrirCRM(crmSel.dominio, false);
+}
+
+function pintarCRM() {
+  const filas = crmD.filas || [], filtros = CRM_FILTROS();
+  if (!filtros.some(([id]) => id === crmFiltro)) crmFiltro = "activos";
+  llenar($("crm-kpis"), ...filtros.filter(([id, , fn]) => ["hoy", "activos", "todos"].includes(id) || filas.some(fn))
+    .map(([id, nombre, fn]) => h("button", { class: "kpi" + (crmFiltro === id ? " activo" : ""), onclick: () => { crmFiltro = id; pintarCRM(); } },
+      h("b", {}, filas.filter(fn).length), h("span", {}, nombre))));
+  const q = norm($("crm-buscar").value);
+  const visibles = filas.filter(filtros.find(([id]) => id === crmFiltro)[2])
+    .filter((f) => !q || norm([f.nombre, f.comuna, f.decisor].join(" ")).includes(q));
+  $("crm-cuantas").textContent = `${visibles.length} de ${filas.length}`;
+  // Aceptaron el video y están esperando que lo grabes.
+  const esperan = filas.filter((f) => f.etapa === "acepto" && f.prospeccion === "whatsapp");
+  $("crm-loom").hidden = !esperan.length;
+  llenar($("crm-loom"), h("b", {}, `Esperan tu Loom · ${esperan.length}`),
+    h("p", { class: "nota-chica", style: "margin:4px 0 0" }, "Les interesó el video. Grábalo, abre a cada uno y pega el enlace: sale el mensaje y los seguimientos quedan andando solos."),
+    ...esperan.map((f) => h("button", { class: "btn prim", onclick: () => abrirCRM(f.dominio) }, f.nombre)));
+  // La prueba: el pitch en audio contra el pitch en texto.
+  const pr = crmD.prueba || {}, a = pr.audio || {}, x = pr.texto || {};
+  const linea = (n, d) => `${d.aceptaron || 0} de ${d.enviados || 0} aceptaron el video`;
+  $("crm-prueba").hidden = !(a.enviados || x.enviados);
+  $("crm-prueba").textContent = `Pitch en audio: ${linea("audio", a)} · en texto: ${linea("texto", x)}`
+    + ((a.enviados || 0) + (x.enviados || 0) < 30 ? " · todavía son pocos para concluir" : "");
+  const vacio = !filas.length
+    ? "Todavía nadie respondió. Cuando alguien conteste por correo o WhatsApp, aparece aquí con su próximo paso."
+    : crmFiltro === "hoy" ? "Nada pendiente para hoy." : "Nada con este filtro.";
+  llenar($("crm-filas"), ...(visibles.length ? visibles.map(filaCRM) : [h("p", { class: "vacio" }, vacio)]));
+}
+
+function etiquetaVence(f) {
+  if (CERRADAS.includes(f.etapa)) return ["", nombreEtapa(f.etapa)];
+  if (!f.proximo.fecha) return ["", "sin fecha"];
+  if (f.vence === "atrasado") return ["atrasado", "Atrasado " + fechaCorta(f.proximo.fecha)];
+  if (f.vence === "hoy") return ["hoy", "Hoy" + (f.proximo.hora ? " " + f.proximo.hora : "")];
+  return [f.vence, fechaCorta(f.proximo.fecha)];
+}
+
+function filaCRM(f) {
+  const [clase, texto] = etiquetaVence(f);
+  const p = f.proximo || {};
+  return h("button", { class: "fila" + (crmSel && crmSel.dominio === f.dominio ? " activo" : "") + (CERRADAS.includes(f.etapa) ? " apagada" : ""),
+    onclick: () => abrirCRM(f.dominio) },
+    h("span", { class: "vence " + clase }, texto),
+    h("span", {},
+      h("span", { class: "n" }, f.nombre),
+      h("span", { class: "m" }, [f.decisor, f.comuna, f.prospeccion === "whatsapp" ? "prospección por WhatsApp" : f.canal === "whatsapp" ? "respondió por WhatsApp" : "respondió por correo"].filter(Boolean).join(" · ")),
+      p.nota || p.tipo ? h("span", { class: "m" }, "→ ", [crmD.tipos[p.tipo], p.nota].filter(Boolean).join(": ")) : null),
+    h("span", { class: "derecha" }, h("span", { class: "chip etapa-" + f.etapa }, nombreEtapa(f.etapa)),
+      f.valor ? h("small", { style: "color:var(--muted)" }, "$" + Number(f.valor).toLocaleString("es-CL") + "/mes") : null),
+  );
+}
+
+async function abrirCRM(dominio, arriba = true) {
+  try { crmSel = await api("/api/crm/" + encodeURIComponent(dominio)); }
+  catch (e) { return aviso(e.message, true); }
+  pintarFichaCRM(arriba);
+  pintarCRM();
+}
+
+function cerrarCRM() {
+  crmSel = null;
+  const caja = $("crm-ficha");
+  caja.classList.add("vacia");
+  llenar(caja, h("p", { class: "vacio" }, "Elige un negocio para ver su conversación y su próximo paso."));
+  pintarCRM();
+}
+
+async function accionCRM(cuerpo, boton) {
+  if (boton) { boton.disabled = true; boton.classList.add("girando"); }
+  try {
+    crmSel = await api(`/api/borradores/${crmSel.dominio}/crm`, cuerpo);
+    const lista_ = await api("/api/crm"); crmD = lista_;
+    pintarFichaCRM(false); pintarCRM(); cargarEstado().catch(() => {});
+    return true;
+  } catch (e) { aviso(e.message, true); return false; }
+  finally { if (boton) { boton.disabled = false; boton.classList.remove("girando"); } }
+}
+
+const ESTADO_PROG = { pendiente: "sale solo", enviado: "enviado", cancelado: "cancelado", incierto: "en duda", error: "no salió" };
+
+// Pegas el enlace, apruebas los seguimientos y sigue solo.
+function cajaLoom(d, m) {
+  const area = h("textarea", { rows: 6, value: m.texto });
+  const enlaceI = h("input", { type: "text", placeholder: "Pega aquí el enlace del Loom", style: "width:100%;margin:6px 0",
+    oninput: (e) => { area.value = m.texto.replace("{loom}", e.target.value.trim() || "{loom}"); } });
+  const segs = (d.seguimientos_plantilla || []).map((s) => {
+    const marca = h("input", { type: "checkbox", checked: true });
+    const texto = h("textarea", { rows: Math.min(4, s.texto.split("\n").length + 1), value: s.texto });
+    return { s, marca, texto, nodo: h("div", { class: "seg-prog" },
+      h("label", { class: "check" }, marca, h("span", {}, `Seguimiento ${s.n}: a las ${s.horas} h, si no ha respondido`)), texto) };
+  });
+  const enviar = h("button", { class: "btn prim", onclick: async (e) => {
+    const texto = area.value.trim();
+    if (!/https?:\/\/\S+/.test(texto)) return aviso("Pega el enlace del Loom", true);
+    const falta = texto.match(/\{\w+\}/g);
+    if (falta) return aviso("Rellena antes: " + falta.join(", "), true);
+    const seguimientos = segs.filter((x) => x.marca.checked && x.texto.value.trim()).map((x) => ({ n: x.s.n, texto: x.texto.value.trim() }));
+    const cuantos = seguimientos.length ? ` y dejar ${seguimientos.length} seguimiento${seguimientos.length > 1 ? "s" : ""} programado${seguimientos.length > 1 ? "s" : ""}` : "";
+    if (!confirm(`¿Enviar el Loom a ${d.nombre}${cuantos}?\n\n${texto}`)) return;
+    const b = e.currentTarget; b.disabled = true; b.classList.add("girando");
+    try {
+      crmSel = await api(`/api/borradores/${d.dominio}/loom`, { texto, seguimientos });
+      crmD = await api("/api/crm"); pintarFichaCRM(false); pintarCRM(); cargarEstado().catch(() => {});
+      crmSel.aviso ? aviso(crmSel.aviso, true) : aviso(seguimientos.length ? "Loom enviado. Los seguimientos salen solos si no responde." : "Loom enviado.");
+    } catch (err) { aviso(err.message, true); b.disabled = false; b.classList.remove("girando"); }
+  } }, "Enviar el Loom");
+  return h("div", { class: "paso-metodo" },
+    h("b", {}, "Fase 4 · pega el enlace del Loom y se envía"), enlaceI, area,
+    segs.length ? h("p", { class: "nota-chica", style: "margin:12px 0 0" },
+      "Los seguimientos los apruebas ahora, viendo cada texto. Salen solos, de lunes a sábado en horario, solo si no ha respondido. Si contesta cualquier cosa, los que falten se cancelan y te aviso para que respondas tú.") : null,
+    ...segs.map((x) => x.nodo),
+    h("div", { class: "wa-botones", style: "margin-top:12px" }, enviar,
+      h("button", { class: "btn", onclick: () => navigator.clipboard.writeText(area.value).then(() => aviso("Copiado.")) }, "Copiar")));
+}
+
+function pintarFichaCRM(arriba = true) {
+  const d = crmSel, caja = $("crm-ficha"), p = d.proximo || {};
+  caja.classList.remove("vacia");
+  const cerrada = CERRADAS.includes(d.etapa);
+
+  // El próximo paso: qué, cuándo y una nota.
+  const tipo = h("select", {}, h("option", { value: "" }, "¿Qué toca?"),
+    ...Object.entries(crmD.tipos).map(([k, v]) => h("option", { value: k, selected: k === p.tipo }, v)));
+  const fecha = h("input", { type: "date", value: p.fecha || "" });
+  const horaI = h("input", { type: "time", value: p.hora || "" });
+  const nota = h("textarea", { rows: 2, value: p.nota || "", placeholder: "Qué vas a hacer, p. ej. «Loom mostrando cómo respondería sus consultas de arriendo»" });
+  const leer = () => ({ tipo: tipo.value, fecha: fecha.value, hora: horaI.value, nota: nota.value });
+  const pedido = h("input", { type: "text", placeholder: "Opcional: qué pedirle a Claude («más corto», «menciona su portal»)", style: "width:100%;margin-top:8px" });
+
+  const proximoCaja = h("div", { class: "caja", style: "margin-top:12px" },
+    h("h2", {}, "Próximo paso"),
+    h("div", { class: "proximo-form" }, tipo, fecha, horaI, nota),
+    h("div", { class: "wa-botones" },
+      h("button", { class: "btn", onclick: (e) => accionCRM({ accion: "proximo", proximo: leer() }, e.currentTarget).then((ok) => ok && aviso("Guardado.")) }, "Guardar"),
+      h("button", { class: "btn prim", onclick: async (e) => {
+        const hecho = prompt("¿Cómo te fue? (opcional: queda en el historial)", "");
+        if (hecho === null) return;
+        if (await accionCRM({ accion: "hecho", nota: hecho }, e.currentTarget)) aviso("Registrado. Define el siguiente paso.");
+      } }, "Hecho ✓"),
+      h("button", { class: "btn", disabled: !estado.claude, title: estado.claude ? "Claude escribe el guion; tú lo grabas o lo envías" : "No encuentro el comando claude",
+        onclick: async (e) => {
+          const t = tipo.value || "mensaje", b = e.currentTarget;
+          b.disabled = true; b.classList.add("girando");
+          aviso(`Claude está escribiendo: ${crmD.tipos[t].toLowerCase()}. Tarda entre 20 segundos y un minuto…`);
+          try { crmSel = await api(`/api/borradores/${d.dominio}/guion`, { tipo: t, nota: pedido.value }); pintarFichaCRM(false); aviso("Listo: el guion está abajo."); }
+          catch (err) { aviso(err.message, true); }
+          finally { b.disabled = false; b.classList.remove("girando"); }
+        } }, "Guion con Claude")),
+    pedido,
+    h("p", { class: "nota-chica", style: "margin-top:8px" }, "Los audios y los Looms los grabas tú. Claude solo te deja el guion con lo que sabemos de este negocio."));
+
+  // El método: el texto de la fase que toca, listo para copiar o enviar.
+  const pasos = (d.metodo || []).map((m) => {
+    if (m.clave === "envio_loom" && d.prospeccion === "whatsapp" && !d.no_enviar) return cajaLoom(d, m);
+    const area = h("textarea", { rows: Math.min(9, m.texto.split("\n").length + 1), value: m.texto });
+    const loom = m.texto.includes("{loom}") ? h("input", { type: "text", placeholder: "Pega aquí el enlace del Loom", style: "width:100%;margin-top:6px",
+      oninput: (e) => { area.value = m.texto.replace("{loom}", e.target.value.trim() || "{loom}"); } }) : null;
+    const copiar = h("button", { class: "btn", onclick: () => navigator.clipboard.writeText(area.value).then(() => aviso("Copiado."), () => aviso("No pude copiar: selecciónalo a mano.", true)) }, "Copiar");
+    const enviar = m.enviable && !d.no_enviar ? h("button", { class: "btn prim", onclick: async (e) => {
+      const texto = area.value.trim();
+      const falta = texto.match(/\{\w+\}/g);
+      if (falta) return aviso("Rellena antes: " + falta.join(", "), true);
+      if (!confirm(`¿Enviar este mensaje por WhatsApp a ${d.nombre}?\n\n${texto}`)) return;
+      const b = e.currentTarget; b.disabled = true; b.classList.add("girando");
+      try {
+        crmSel = await api(`/api/borradores/${d.dominio}/wa_enviar`, { paso: m.clave, texto });
+        crmD = await api("/api/crm"); pintarFichaCRM(false); pintarCRM(); cargarEstado().catch(() => {});
+        crmSel.aviso ? aviso(crmSel.aviso, true) : aviso("Enviado. Quedó en el historial.");
+      } catch (err) { aviso(err.message, true); b.disabled = false; b.classList.remove("girando"); }
+    } }, "Enviar por WhatsApp") : null;
+    const aMano = (m.enviable || m.marcable) ? h("button", { class: "btn", title: "Queda en el historial y avanza la etapa, igual que si saliera del panel",
+      onclick: (e) => accionCRM({ accion: "paso_hecho", paso: m.clave }, e.currentTarget).then((ok) => ok && aviso("Anotado.")) },
+      d.prospeccion !== "whatsapp" ? "Ya le contesté esto" : m.clave === "pitch" || m.clave === "cta_audio" ? "Ya lo mandé en audio" : "Ya lo mandé desde el celular") : null;
+    const audioBtn = m.clave === "pitch" && m.enviable && !d.no_enviar ? h("button", { class: "btn prim", onclick: async (e) => {
+      if (!confirm(`¿Enviarle a ${d.nombre} el audio del pitch?`)) return;
+      const b = e.currentTarget; b.disabled = true; b.classList.add("girando");
+      try {
+        await api("/api/conversaciones/" + encodeURIComponent(d.dominio) + "/audio", {});
+        crmSel = await api("/api/crm/" + encodeURIComponent(d.dominio));
+        crmD = await api("/api/crm"); pintarFichaCRM(false); pintarCRM(); aviso("Audio enviado.");
+      } catch (err) { aviso(err.message, true); b.disabled = false; b.classList.remove("girando"); }
+    } }, "🎤 Enviar el audio") : null;
+    return h("div", { class: "paso-metodo" }, h("b", {}, m.titulo), loom, area, h("div", { class: "wa-botones" }, copiar, audioBtn, enviar, aMano));
+  });
+  const metodoCaja = d.lo_lleva_el_agente && !pasos.length ? h("div", { class: "caja", style: "margin-top:12px" },
+    h("h2", {}, "Esta conversación la lleva el agente"),
+    h("p", { class: "nota-chica" }, d.etapa === "acepto" ? "Aceptó el video: grábale el Loom y pega el enlace arriba, en «Esperan tu Loom»."
+      : "El pitch, las respuestas y el seguimiento salen solos. Tú solo grabas el Loom cuando acepte el video: te aparece arriba, en «Esperan tu Loom». Si prefieres llevarla tú, apaga el bot en Conversaciones.")) :
+    pasos.length ? h("div", { class: "caja", style: "margin-top:12px" },
+    h("h2", {}, d.prospeccion === "whatsapp" ? "El método: lo que toca ahora" : "Qué contestarle, según lo que dijo"),
+    h("p", { class: "nota-chica" }, d.prospeccion !== "whatsapp" ? "Ya leyó quién eres y qué haces en el correo 1: no hace falta otro pitch. Adapta el texto a lo que dijo, respóndele en el mismo hilo de Gmail y marca qué le contestaste."
+      : d.no_enviar ? d.no_enviar + ". Cópialo y mándalo tú."
+      : "Los audios los grabas desde el celular (o los mandas como texto). Cada mensaje sale solo cuando aprietas Enviar."),
+    ...pasos) : null;
+  const prog = d.programados || [];
+  const progCaja = prog.length ? h("div", { class: "caja", style: "margin-top:12px" },
+    h("h2", {}, "Seguimientos del Loom"),
+    h("ul", { class: "linea-t" }, ...prog.map((x) => h("li", {},
+      h("small", {}, hora(x.enviado || x.cuando)), h("b", {}, (ESTADO_PROG[x.estado] || x.estado) + " · "), x.texto.replace(/\n/g, " · ")))),
+    prog.some((x) => x.estado === "pendiente")
+      ? h("div", { class: "wa-botones" }, h("button", { class: "btn", onclick: (e) => accionCRM({ accion: "cancelar_programados" }, e.currentTarget).then((ok) => ok && aviso("Cancelados: no sale ninguno más.")) }, "Cancelar los que faltan"),
+          h("small", { style: "align-self:center;color:var(--muted)" }, d.bot_apagado ? "Detenidos: apagaste lo automático en este chat (Conversaciones)." : "Si responde, se cancelan solos."))
+      : null) : null;
+  const contactoI = h("input", { type: "text", value: d.contacto || "", placeholder: "Nombre de la persona", style: "width:100%",
+    onchange: (e) => accionCRM({ accion: "contacto", contacto: e.target.value }).then((ok) => ok && aviso("Guardado: los textos ya lo usan.")) });
+
+  const guiones = (d.guiones || []).map((g, i) => h("div", { style: i ? "margin-top:12px" : "" },
+    h("small", { style: "color:var(--muted)" }, `${crmD.tipos[g.tipo] || g.tipo} · ${hora(g.fecha)}`),
+    h("div", { class: "guion" }, g.texto),
+    h("button", { class: "btn", onclick: () => navigator.clipboard.writeText(g.texto).then(() => aviso("Copiado."), () => aviso("No pude copiar: selecciónalo a mano.", true)) }, "Copiar")));
+
+  const etapaSel = h("select", {}, ...crmD.etapas.map((e) => h("option", { value: e.clave, selected: e.clave === d.etapa }, e.nombre)));
+  const valor = h("input", { type: "number", min: 0, step: 10000, value: d.valor || "", placeholder: "Valor mensual (CLP)", style: "width:190px",
+    onchange: (e) => accionCRM({ accion: "valor", valor: e.target.value }) });
+  const notaNueva = h("textarea", { rows: 2, placeholder: "Una nota: qué dijo en la llamada, qué le preocupa…" });
+
+  const wsp = d.whatsapp ? h("span", {}, d.whatsapp, " ",
+    enlace(`https://wa.me/${d.whatsapp.replace(/\D/g, "")}`, "abrir chat ↗"),
+    d.whatsapp_desde && d.whatsapp_desde !== "a mano" ? h("small", { style: "color:var(--muted)" }, ` · la conversación está en tu número ${d.whatsapp_desde}`) : null) : "—";
+  const mail = d.para ? h("span", {}, d.para, " ", enlace(`https://mail.google.com/mail/u/0/#search/${encodeURIComponent(d.para)}`, "ver el hilo en Gmail ↗")) : "—";
+
+  llenar(caja,
+    h("button", { class: "btn cerrar", onclick: cerrarCRM }, "← Volver a la lista"),
+    h("h2", { class: "t" }, d.nombre),
+    h("div", { class: "chips" }, h("span", { class: "chip etapa-" + d.etapa }, nombreEtapa(d.etapa)),
+      d.comuna ? h("span", { class: "chip" }, d.comuna) : null, enlace(d.web, sinWww(d.web) + " ↗")),
+    d.respuesta ? h("div", { class: "dijo" }, h("b", {}, "Te respondió: "), `«${d.respuesta}»`) : null,
+    d.motivo_perdido ? h("div", { class: "banner bad", style: "margin:8px 0 0" }, "Perdido: " + d.motivo_perdido) : null,
+    h("dl", { class: "dl", style: "margin-top:10px" },
+      ...(d.prospeccion === "whatsapp" ? par("Con quién hablas", contactoI)
+        : par("Decisor", [d.decisor, d.decisor_cargo].filter(Boolean).join(", ") || "sin identificar")),
+      ...par("WhatsApp", wsp), ...par("Correo", mail),
+      ...par("Asunto", d.asunto || "—")),
+    !cerrada ? metodoCaja : null,
+    !cerrada ? progCaja : null,
+    !cerrada ? proximoCaja : null,
+    guiones.length ? h("div", { class: "caja", style: "margin-top:12px" }, h("h2", {}, "Guiones"), ...guiones) : null,
+    h("div", { class: "caja", style: "margin-top:12px" },
+      h("h2", {}, "Etapa y valor"),
+      h("div", { class: "wa-botones", style: "margin-top:0" }, etapaSel,
+        h("button", { class: "btn", onclick: async (e) => {
+          const clave = etapaSel.value;
+          if (clave === d.etapa) return aviso("Ya está en esa etapa.");
+          let motivo = "", baja = false;
+          if (clave === "perdido") {
+            motivo = prompt("¿Por qué se perdió? (precio, ya tiene proveedor, no responde…)", "");
+            if (motivo === null) return;
+            baja = confirm("¿Pidió que no le escribas más? Si es así, lo paso a la lista negra.");
+          }
+          if (await accionCRM({ accion: "etapa", etapa: clave, motivo, baja }, e.currentTarget)) aviso(`Movido a ${nombreEtapa(clave)}.`);
+        } }, "Mover"), valor),
+      h("p", { class: "nota-chica", style: "margin-top:8px" }, "Al mover de etapa, el próximo paso se llena con lo que sugiere el método. Puedes cambiarlo.")),
+    h("div", { class: "caja", style: "margin-top:12px" },
+      h("h2", {}, "Historial"),
+      h("div", { class: "afinar", style: "margin-bottom:10px" }, notaNueva,
+        h("button", { class: "btn", onclick: async (e) => { if (await accionCRM({ accion: "nota", nota: notaNueva.value }, e.currentTarget)) notaNueva.value = ""; } }, "Anotar")),
+      h("ul", { class: "linea-t" }, ...(d.linea || []).map((x) => h("li", {}, h("small", {}, hora(x.fecha)), x.nota)))),
+    d.observacion || (d.investigacion || []).length ? h("details", { style: "margin-top:14px" },
+      h("summary", {}, "Lo que investigamos de este negocio"),
+      d.observacion ? h("div", { class: "obs", style: "margin-top:8px" }, h("b", {}, "Observación"), d.observacion) : null,
+      d.falta ? h("p", {}, h("b", {}, "Le falta: "), d.falta) : null,
+      h("ul", { class: "hallazgos" }, ...(d.investigacion || []).map((x) => h("li", {}, x.dato, " ", enlace(x.fuente, "fuente ↗"))))) : null,
+  );
+  if (arriba) caja.scrollTop = 0;
+}
+
 // --- arranque ----------------------------------------------------------------
 document.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); guardar(); }
   if (e.key === "Escape" && vista === "radar" && fichaR) cerrarFicha();
+  if (e.key === "Escape" && vista === "crm" && crmSel) cerrarCRM();
 });
 window.addEventListener("hashchange", () => {
   const v = location.hash.slice(1);
-  if (["correos", "radar"].includes(v) && v !== vista) mostrar(v);
+  if (VISTAS.includes(v) && v !== vista) mostrar(v);
 });
 (async () => {
   let inicial = location.hash.slice(1);
-  if (!["correos", "radar"].includes(inicial)) {
+  if (!VISTAS.includes(inicial)) {
     try { inicial = localStorage.getItem("prospector-vista") || "correos"; } catch { inicial = "correos"; }
   }
-  mostrar(inicial === "radar" ? "radar" : "correos");
+  mostrar(VISTAS.includes(inicial) ? inicial : "correos");
   try {
     await cargarEstado(); await cargarLista();
     const primero = lista.find((b) => b.estado === "por revisar");
@@ -905,6 +1850,7 @@ window.addEventListener("hashchange", () => {
   } catch (e) { aviso("No pude hablar con el panel: " + e.message, true); }
   setInterval(() => { cargarEstado().catch(() => {}); cargarLista().catch(() => {}); }, 20000);
   vigilar();
+  if (vista !== "conversaciones") vigilarConv();
 })();
 </script>
 </body>

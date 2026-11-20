@@ -78,11 +78,98 @@ def asunto_de(b: dict, paso: int) -> str:
     return asunto if paso == 0 else "Re: " + asunto
 
 
+# --- la prueba A/B: ¿la demo en el correo 1 sube la tasa de respuesta? -------------------
+# Solo si tienes una demo que se pueda probar (DEMO_URL). La línea la pone el envío (no el
+# borrador), solo en el grupo "con", justo antes del cierre. Sin DEMO_URL no hay prueba.
+RESPONDIERON = ("respondió", "interesado", "retomar", "baja")
+
+
+def demo_url() -> str:
+    return config.texto("DEMO_URL").strip()
+
+
+def demo_linea() -> str:
+    return config.texto("DEMO_LINEA").strip() or f"Si quieres verlo antes, acá lo puedes probar tú mismo: {demo_url()}"
+
+
+def meta_demo() -> int:
+    return max(0, config.numero("PRUEBA_DEMO_META", 100))
+
+
+def asignar_demo(b: dict, borradores: list[dict]) -> str:
+    """Al aprobar: le toca "con" o "sin" demo, alternando, hasta META de cada uno. "" = ya terminó o no hay demo."""
+    if b.get("prueba_demo"):
+        return b["prueba_demo"]
+    if not demo_url():
+        return ""
+    meta = meta_demo()
+    cuenta = {g: sum(1 for x in borradores if x.get("prueba_demo") == g and x.get("dominio") != b.get("dominio"))
+              for g in ("con", "sin")}
+    libres = [g for g in ("con", "sin") if cuenta[g] < meta]
+    if not libres:
+        return ""
+    b["prueba_demo"] = min(libres, key=lambda g: (cuenta[g], g != "con"))
+    return b["prueba_demo"]
+
+
+def con_demo(texto: str) -> str:
+    """El correo 1 con la línea de la demo antes del último párrafo (el cierre)."""
+    partes = [p for p in texto.strip().split("\n\n") if p.strip()]
+    if len(partes) < 2:
+        return texto.strip() + "\n\n" + demo_linea()
+    return "\n\n".join(partes[:-1] + [demo_linea(), partes[-1]])
+
+
+def resultados_demo(borradores: list[dict]) -> dict:
+    r = {g: {"enviados": 0, "respondieron": 0} for g in ("con", "sin")}
+    for b in borradores:
+        g = b.get("prueba_demo")
+        if g in r and b.get("envios"):
+            r[g]["enviados"] += 1
+            r[g]["respondieron"] += b.get("estado") in RESPONDIERON or bool(b.get("respuesta_detectada"))
+    return r | {"meta": meta_demo()}
+
+
 def cuerpo_de(b: dict, paso: int) -> str:
-    return b["correos"][paso]["cuerpo"].strip() + "\n\n" + gmail.firma()
+    texto = b["correos"][paso]["cuerpo"].strip()
+    if paso == 0 and b.get("prueba_demo") == "con" and demo_url():
+        texto = con_demo(texto)
+    return texto + "\n\n" + gmail.firma()
+
+
+# --- la aprobación automática (ENVIO_AUTO_APROBAR=si) ----------------------------------------
+
+def auto_aprobar_activo() -> bool:
+    return config.texto("ENVIO_AUTO_APROBAR").lower() in ("1", "si", "sí", "true")
+
+
+def auto_aprobar(borradores: list[dict], ahora: datetime) -> int:
+    """
+    Aprueba los borradores "por revisar" que el panel deja aprobar sin ningún problema,
+    hasta llenar el tope del día. Los que tienen algo que comprobar o un correo supuesto
+    esperan al usuario: eso lo marca correos.revisar como problema. Devuelve cuántos.
+    """
+    if not auto_aprobar_activo():
+        return 0
+    cupo = config.numero("ENVIO_MAX_DIA", 20) - enviados_hoy(borradores, ahora) \
+        - sum(1 for b in borradores if b.get("estado") == "aprobado")
+    hechos = 0
+    for b in sorted((b for b in borradores if b.get("estado") == "por revisar"), key=lambda b: b.get("creado", "")):
+        if cupo <= 0:
+            break
+        problemas, _ = correos.revisar(b)
+        if problemas:
+            continue
+        b.update(estado="aprobado", aprobado_en=ahora.isoformat(timespec="seconds"), motivo="", aprobado_por="automático")
+        asignar_demo(b, borradores)
+        correos.guardar(b)
+        cupo, hechos = cupo - 1, hechos + 1
+    return hechos
 
 
 def mandar(b: dict, paso: int, ahora: datetime) -> None:
+    if paso == 0:
+        asignar_demo(b, correos.listar())  # también a los que se aprobaron antes de la prueba
     responde = b["envios"][0]["message_id"] if paso else ""
     mid = gmail.enviar(b["para"], asunto_de(b, paso), cuerpo_de(b, paso), responde_a=responde)
     b["envios"].append({"paso": paso, "fecha": ahora.isoformat(timespec="seconds"),
@@ -180,6 +267,8 @@ class Envio(threading.Thread):
                 mirar_respuestas(borradores, ahora)
             if frenar_por_rebotes(estado, borradores):
                 return
+            if auto_aprobar(borradores, ahora):
+                borradores = correos.listar()
             if not en_horario(ahora):
                 return
             if estado.get("proximo") and ahora < _fecha(estado["proximo"]):

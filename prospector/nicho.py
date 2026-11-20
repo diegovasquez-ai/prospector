@@ -33,7 +33,7 @@ def _vacio() -> dict:
     return {"rubro": "negocios", "singular": "negocio", "pais": "CL", "busquedas": [],
             "confirman_en_nombre": [], "confirman_en_web": [], "descartar": [], "cadenas": [],
             "portales": {}, "directorios": [], "sistemas": {}, "catalogo": {}, "paginas_equipo": [],
-            "resenas": {}, "equipo_minimo": 3, "textos": {}}
+            "resenas": {}, "equipo_minimo": 3, "textos": {}, "verificar": {}}
 
 
 def _leido() -> tuple[int, dict]:
@@ -48,7 +48,8 @@ _cache: tuple[tuple, dict] = ((), {})
 def actual() -> dict:
     """El nicho activo, con todo lo opcional relleno. Se relee si cambió el archivo."""
     global _cache
-    firma = (str(ARCHIVO),) + (ARCHIVO.stat().st_mtime_ns,) if ARCHIVO.exists() else (str(ARCHIVO), 0)
+    # Con el tamaño también: en Windows, dos escrituras seguidas pueden quedar con la misma fecha.
+    firma = (str(ARCHIVO), ARCHIVO.stat().st_mtime_ns, ARCHIVO.stat().st_size) if ARCHIVO.exists() else (str(ARCHIVO), 0, 0)
     if _cache[0] != firma:
         _cache = (firma, {**_vacio(), **_leido()[1]})
     return _cache[1]
@@ -75,7 +76,7 @@ def validar(d) -> list[str]:
     for clave in ("confirman_en_nombre", "confirman_en_web", "cadenas", "directorios", "paginas_equipo"):
         if not isinstance(d.get(clave, []), list):
             malos.append(f"«{clave}» debe ser una lista")
-    for clave in ("portales", "sistemas", "catalogo", "resenas", "textos"):
+    for clave in ("portales", "sistemas", "catalogo", "resenas", "textos", "verificar"):
         if not isinstance(d.get(clave, {}), dict):
             malos.append(f"«{clave}» debe ser un objeto")
     if not isinstance(d.get("equipo_minimo", 3), int):
@@ -90,7 +91,9 @@ def guardar(d: dict) -> None:
     malos = validar(d)
     if malos:
         raise ValueError("; ".join(malos))
+    global _cache
     ARCHIVO.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _cache = ((), {})  # lo que se acaba de guardar es lo que vale, sin depender de la fecha del archivo
 
 
 def ejemplo(nombre: str = "inmobiliarias") -> dict:
@@ -166,6 +169,15 @@ Responde SOLO con un JSON así, sin nada antes ni después:
   "paginas_equipo": ["cómo llama este rubro a su página de equipo"],
   "resenas": {{"bueno": 20, "muy_bueno": 100}},
   "equipo_minimo": 3,
+  "verificar": {{
+    "es": "qué tiene que ser un negocio para servir, con artículo (por ejemplo: una clínica dental)",
+    "criterio": "cuándo lo es, en una frase que se pueda comprobar leyendo su web",
+    "no_es": "lo que se parece pero NO sirve (cursos del rubro, proveedores, gremios...)",
+    "nombre_no": ["raíces sin acentos que, en el nombre, dicen que NO es del rubro"],
+    "categoria_no": ["raíces de categorías de Maps que NO son del rubro"],
+    "nombre_si": ["raíces sin acentos que suelen estar en el nombre de los del rubro"],
+    "categoria_si": ["categorías de Maps del rubro, sin acentos y en minúscula"]
+  }},
   "textos": {{
     "problema": "el problema concreto que resuelve la oferta para este rubro, en una frase",
     "resultado": "qué logra para ellos, en infinitivo y sin nombrar la herramienta",

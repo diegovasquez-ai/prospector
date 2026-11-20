@@ -51,7 +51,7 @@ Si una página no carga o un perfil es privado, sigue: no lo rellenes con suposi
 - **Para:** el correo del decisor solo si está publicado. Si no, `gerencia@`
   o el genérico, dirigido al decisor por su nombre (`dudoso`). Nunca deduzcas
   un correo por patrón.
-- **Observación = la prueba.** UNA, con dos partes: un dato real y
+- **Observación = el halago.** UNA, con dos partes: un dato real y
   específico de su negocio, y por qué eso habla bien de ellos. La prueba: si
   el dueño lo lee, ¿se siente reconocido? Si se queda pensando "¿y?" o, peor,
   le suena a crítica, no sirve.
@@ -59,9 +59,14 @@ Si una página no carga o un perfil es privado, sigue: no lo rellenes con suposi
   - Datos sin halago: "la mitad de sus servicios son de ortodoncia". Es verdad,
     pero no dice nada bueno de ellos.
   - Con doble lectura: "muchas sedes para un equipo tan chico". Puede sonar a pulla.
-  - Buenas (de distintos rubros): "probé su cotizador: da un rango al instante y sin
-    pedir datos. Pocos se dan ese trabajo"; "una de sus ejecutivas lleva 25 años con
-    ustedes; que alguien se quede tanto dice mucho de cómo trabajan".
+  - Buenas (de distintos rubros; son ideas, no frases para copiar): su cotizador da
+    un rango al instante y sin pedir datos; una de sus ejecutivas lleva 25 años con
+    ellos.
+  - En inmobiliarias: las fichas traen el plano y el gasto común; en Google varios
+    clientes nombran a la misma corredora por cómo los acompañó en la promesa; venden
+    en Ñuñoa desde 2009; el video del recorrido de un depto deja entender el espacio.
+  - Cómo se dice en el correo lo decide `plantillas/secuencia.md`: simple, una cifra
+    como mucho y sin las muletillas de "Lo que delata a la IA".
   - Los clientes son buenos testigos: "sus clientes destacan que responden
     a tiempo" se puede usar. Una queja nunca se cita.
   - Si tienen algo público que se usa sin dejar datos (un cotizador, un
@@ -72,12 +77,15 @@ Si una página no carga o un perfil es privado, sigue: no lo rellenes con suposi
 ## 3. Redacta
 
 Los tres correos de `plantillas/secuencia.md`. **El correo 1 solo busca una
-respuesta**: la prueba (tu observación), la señal como afirmación, la frase de
-Experiencia y la de Cierre de `negocio.md`, tal cual. Sin cifras no medidas ni piezas
-técnicas (nada de agente de IA, CRM ni automatizar), sin reunión ni diagnóstico. De 80
-a 120 palabras. Los correos 2 y 3 son cortos, sin caso ni venta. **Sin firma en el
-cuerpo**: la añade el panel al enviar. Sin enlaces. Si no hay decisor con nombre,
-saluda "Hola," y escribe de ustedes.
+respuesta**: el halago (tu observación), lo que notaste como afirmación, la frase de
+Experiencia y la de Cierre de `negocio.md`, tal cual. Sin cifras no medidas ni jerga
+(nada de agente de IA, CRM ni chatbot), sin reunión ni diagnóstico. De 50 a 90
+palabras. **Tiene que sonar a quien escribe, escribiendo rápido**: investigaste mucho, pero el
+correo usa UN detalle, dicho simple. Antes de guardar, revísalo contra "Lo que delata a
+la IA" de `plantillas/secuencia.md` y no copies frases de sus ejemplos ni de esta
+plantilla. Los correos 2 y 3 son cortos, sin caso ni venta.
+**Sin firma en el cuerpo**: la añade el panel al enviar. Sin enlaces. Si no hay
+decisor con nombre, saluda "Hola," y escribe de ustedes.
 
 ## 4. Guarda `borradores/<dominio>.json`
 
@@ -123,8 +131,10 @@ saluda "Hola," y escribe de ustedes.
   la ficha). Nunca un teléfono cualquiera ni uno deducido: si no hay, deja `{}`.
   `de` es `general` si es para consultas, o `persona` si es el celular de alguien;
   en ese caso, úsalo solo si lo publica para recibir consultas. `mensaje`: 1 o 2
-  líneas, sin vender ni dato nuevo, que recuerde el correo. Si el número es general,
-  no des por hecho que contesta el decisor ("le escribí por correo a Ana...").
+  líneas, sin vender, sin enlaces ni dato nuevo, que recuerde el correo y sin decir
+  cuándo se envió. Si el número es general, no des por hecho que contesta el decisor
+  ("le escribí por correo a Ana..."). Sale desde los números del usuario un día después
+  del correo 1, si lo aprueba en el panel.
 - Los correos 2 y 3 van en el mismo hilo: su `asunto` va vacío.
 - Los saltos de línea del cuerpo, como `\n` dentro del JSON.
 
